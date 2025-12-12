@@ -5,16 +5,26 @@
 **Apex Retail** is a comprehensive Inventory & Sales Management System designed to streamline retail operations, inventory tracking, and sales processing for small to medium-sized retail businesses.
 
 ### System Purpose
-This system provides retailers with a centralized platform to manage their inventory, process sales transactions, track stock levels, and generate insightful business reports. It aims to replace manual processes and disparate systems with an integrated, efficient solution.
+
+This system provides retailers with a centralized platform to manage:
+
+- Product inventory and stock levels
+- Sales transactions and order processing
+- Customer information and purchase history
+- Supplier and vendor relationships
+- Business analytics and reporting
 
 ### Target Beneficiaries
+
 - **Retail Business Owners** seeking to digitize and optimize their operations
 - **Store Managers** needing real-time inventory visibility
 - **Sales Associates** requiring fast and accurate point-of-sale functionality
 - **Business Analysts** looking for data-driven insights into sales performance
 
 ### Future Capabilities
+
 The system will eventually include:
+
 - Real-time inventory tracking and automated reordering
 - Multi-channel sales integration (in-store, online, mobile)
 - Customer relationship management (CRM) features
@@ -23,71 +33,125 @@ The system will eventually include:
 - Supplier management and purchase order processing
 - Barcode/QR code scanning capabilities
 
-## Current Milestone: Chapter 1
+---
 
-### System Diagnostic Utility
-We begin our development journey with a minimal systems check to verify that our development environment is properly configured.
+## Chapter 1: SystemInfo Diagnostic Tool
 
-**SystemInfo Diagnostic Tool**
-- **Purpose**: Verifies Java installation, Maven configuration, and basic runtime environment
-- **Functionality**: Outputs developer information, project details, Java version, and timestamp
-- **Use Case**: First step in building the system - ensuring all team members have a consistent development setup
+### Overview
 
-### Running the SystemInfo Tool
+The **SystemInfo** utility verifies that the development environment is properly configured.
+
+**Purpose:**
+
+- Confirm Java installation and version compatibility
+- Verify Maven build tool functionality
+- Ensure project structure is set up correctly
+- Confirm development environment readiness
+
+### Running SystemInfo
 
 #### Prerequisites
-Ensure you have the following installed:
-- **Java 21** (OpenJDK or Oracle JDK)
-- **Apache Maven** 3.6 or later
 
-#### Using Maven (Command Line)
+- Java 21 (LTS version)
+- Apache Maven 3.6 or later
+- Recommended IDE: IntelliJ IDEA, Eclipse, or VS Code with Java extensions
+
+#### Maven (Command Line)
+
 ```bash
-# Navigate to the project root directory (where pom.xml is located)
 cd path/to/apex-retail-system
-
-# Clean, compile, and execute the SystemInfo class
 mvn clean compile exec:java
-
-# Or if you want to run it directly after compilation
-mvn compile exec:java
 ```
-## Running from an IDE
 
-1. **Open the project** in your preferred IDE (IntelliJ IDEA, Eclipse, VS Code)
-2. **Import as Maven project** when prompted
-3. **Navigate to** `src/main/java/com/apexretail/diagnostics/SystemInfo.java`
-4. **Run the main method** using your IDE's run/debug functionality
-   - **IntelliJ**: Click the green play button next to the main method
-   - **Eclipse**: Right-click the file → Run As → Java Application
-   - **VS Code**: Click "Run" above the main method or use F5
+## IDE Instructions
 
-## Expected Output
-When successfully executed, you should see output similar to:
+1. Open the project as a Maven project.
+2. Navigate to `src/main/java/com/apexretail/diagnostics/SystemInfo.java`.
+3. Run the `main` method:
+   - **IntelliJ:** Click the green play button.
+   - **Eclipse:** Right-click → Run As → Java Application.
+   - **VS Code:** Click Run or press F5.
 
+### Expected Output
+
+```text
 Developer: David
 Team: Apex Retail Solutions
 Project: Inventory & Sales Management System
-Java Version: 21.0.2
+Java Version: 21.x.x
 Timestamp: 2024-01-15T10:30:00Z
 Application Version: 0.0.1
+```
 
-## Environment Requirements
+## Chapter 2: TemperatureConverter Utility
 
-### Mandatory Software
-- **Java Development Kit (JDK) 21**
-  - Download from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/#java21)
-  - Verify installation: `java -version` should show "21.x.x"
+### Overview
 
-- **Apache Maven 3.6+**
-  - Download from [Apache Maven](https://maven.apache.org/download.cgi)
-  - Verify installation: `mvn -version` should show version 3.6 or higher
+The `TemperatureConverter` utility provides robust, reusable methods for converting temperatures between Celsius, Fahrenheit, and Kelvin.
 
-### Recommended Development Tools
-- **IDE**: IntelliJ IDEA (Community or Ultimate), Eclipse, or VS Code with Java extensions
-- **Git**: For version control
-- **Postman** or **cURL**: For future API testing
+- **Purpose:** Demonstrate utility class development, input validation, and automated testing.
+- **Scope:** Can be integrated into real-world applications if temperature calculations are needed (e.g., temperature-sensitive inventory, shipping conditions).
 
-## Project Structure
+### Utility Class: TemperatureConverter.java
+
+**Features:**
+
+- Converts:
+  - Celsius ↔ Fahrenheit
+  - Celsius ↔ Kelvin
+  - Fahrenheit ↔ Kelvin
+  - Kelvin ↔ Fahrenheit
+- Validates inputs against **absolute zero**, throwing exceptions if violated.
+- Encapsulates constants as **private fields**.
+- Fully reusable and maintainable.
+
+**Example Usage:**
+
+```java
+double f = TemperatureConverter.celsiusToFahrenheit(100.0);
+double k = TemperatureConverter.celsiusToKelvin(0.0);
+double c = TemperatureConverter.fahrenheitToCelsius(32.0);
+```
+
+### Automated Testing: TemperatureConverterTest.java
+
+**Purpose:** Ensure correctness, robustness, and precision of the `TemperatureConverter` utility.
+
+**Test Coverage:**
+
+- Known conversions – water freezing/boiling points, human body temperature, absolute zero, room temperature.
+- Symmetry / Round-trip – C↔F↔C, C↔K↔C, F↔K↔F.
+- Absolute zero boundary checks – throws `IllegalArgumentException` below absolute zero.
+- Special double values – `NaN`, `POSITIVE_INFINITY`, `NEGATIVE_INFINITY`.
+- Extreme but valid values – `Double.MAX_VALUE` and minimal positive values.
+- Precision accumulation – 100 repeated round-trip conversions to detect floating-point drift.
+- Direct vs indirect consistency – F→K vs F→C→K comparison.
+- Zero and range testing – validates correct behavior across negative, zero, and positive temperatures.
+
+### Running Tests (JUnit 5 / Maven)
+
+```bash
+cd path/to/apex-retail-system
+mvn test
+```
+
+### Expected Output
+
+All tests pass without errors or failures.
+
+### Development Notes
+
+- Constants are **private**; tests validate behavior via public methods only.
+- Tests serve **development and QA purposes**; not included in production runtime.
+- Demonstrates **industry-standard practices**:
+  - Encapsulation
+  - Input validation
+  - Unit testing
+  - Edge-case handling
+  - Precision considerations
+
+### Project Structure
+
 ```text
 apex-retail-system/
 ├── src/
@@ -95,24 +159,20 @@ apex-retail-system/
 │   │   └── java/
 │   │       └── com/
 │   │           └── apexretail/
-│   │               └── diagnostics/
-│   │                   └── SystemInfo.java
+│   │               ├── diagnostics/
+│   │               │   └── SystemInfo.java
+│   │               └── utilities/
+│   │                   └── TemperatureConverter.java
 │   └── test/
 │       └── java/
-│           └── (future test classes)
+│           └── com/apexretail/utilities/
+│               └── TemperatureConverterTest.java
 ├── pom.xml
 └── README.md
 ```
-## Development Team
-**Primary Developer & Maintainer**: David  
-**Team**: Apex Retail Solutions  
-**Contact**: Internal repository - see team directory for contact information
 
-## Next Steps
-1. Verify your environment runs the SystemInfo utility successfully
-2. Review the project architecture documentation (coming soon)
-3. Prepare for Chapter 2: Building the core domain models and data layer
+### Development Team
 
----
-
-*This README will evolve as the project progresses. Check back regularly for updates on new features, API documentation, and deployment instructions.*
+- **Primary Developer & Maintainer:** David
+- **Team:** Apex Retail Solutions
+- **Contact:** Internal repository/team directory
