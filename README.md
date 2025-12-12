@@ -50,7 +50,7 @@ mvn clean compile exec:java
 
 # Or if you want to run it directly after compilation
 mvn compile exec:java
-
+```
 ## Running from an IDE
 
 1. **Open the project** in your preferred IDE (IntelliJ IDEA, Eclipse, VS Code)
@@ -102,7 +102,7 @@ apex-retail-system/
 │           └── (future test classes)
 ├── pom.xml
 └── README.md
-
+```
 ## Development Team
 **Primary Developer & Maintainer**: David  
 **Team**: Apex Retail Solutions  
