@@ -150,6 +150,161 @@ All tests pass without errors or failures.
   - Edge-case handling
   - Precision considerations
 
+# Chapter 3: Core Domain Models
+
+## Overview
+
+Chapter 3 introduces the core domain layer of the Apex Retail system. This layer models real-world business concepts using well-defined Java classes that enforce data integrity and business rules at the object level.
+
+The goal of this chapter is to ensure that domain objects are always created in a valid state and remain consistent throughout their lifecycle.
+
+## Domain Design Principles
+
+The following principles guide the domain model design:
+
+- Domain objects are responsible for validating their own data
+- Validation occurs at construction time
+- Objects must never exist in an invalid state
+- Fields are encapsulated and accessed through getters
+- Immutability is preferred where applicable
+- Business rules are kept close to the data they protect
+
+## Product Domain Object
+
+The Product class represents an item managed within the retail inventory system.
+
+### Responsibilities
+
+- Store product identity and attributes
+- Validate all incoming data at creation time
+- Manage inventory quantity safely
+- Enforce stock-related business rules
+
+### Core Attributes
+
+- Unique product identifier
+- Product name
+- Product price
+- Quantity currently in stock
+- Product category
+
+### Validation Rules
+
+- ID must be non-negative
+- Name must not be null, empty, or blank
+- Price must be zero or greater
+- Initial stock quantity must be zero or greater
+- Category must not be null
+
+All validation is performed inside the constructor to ensure that a Product instance can never be created in an invalid state.
+
+### Inventory Behavior
+
+The Product class manages its own inventory state, including:
+
+- Increasing stock quantity
+- Decreasing stock quantity
+- Preventing stock from dropping below zero
+- Determining whether the product is currently in stock
+
+Inventory-related validation is enforced internally to guarantee consistency regardless of where the product is used.
+
+## Category Domain Object
+
+The Category class represents a logical grouping of products within the system.
+
+### Responsibilities
+
+- Classify products for organization and reporting
+- Provide a stable and immutable identifier for grouping
+
+### Core Attributes
+
+- Unique category identifier
+- Category name
+- Optional category description
+
+### Validation Rules
+
+- ID must be valid
+- Name must not be null or blank
+- Description is optional
+
+### Design Characteristics
+
+- Immutable after creation
+- Getters only
+- Equality based solely on ID
+- Overrides equals(), hashCode(), and toString()
+
+# Chapter 4: Inventory Service & Decision Structures
+
+## Overview
+
+Chapter 4 introduces the service layer and applies decision structures to implement business operations that coordinate domain objects.
+
+This chapter focuses on separating business workflow logic from domain data integrity, while ensuring validations occur at the correct layer.
+
+## Service Layer Purpose
+
+The service layer is responsible for:
+
+- Coordinating domain objects
+- Enforcing transaction-level business rules
+- Validating inputs before invoking domain behavior
+- Representing real-world business actions
+
+## InventoryService
+
+The InventoryService manages inventory-related business operations for products.
+
+### Responsibilities
+
+- Sell products by reducing stock
+- Restock products by increasing inventory
+- Validate inputs before performing operations
+- Delegate stock management to the Product domain object
+
+### Key Operations
+
+#### Sell Product
+
+- Accepts a Product and a requested quantity
+- Validates:
+  - Product reference is not null
+  - Quantity requested is greater than zero
+- Delegates stock reduction to the product
+- Relies on domain-level validation to prevent invalid stock changes
+
+#### Restock Product
+
+- Accepts a Product and a quantity to add
+- Validates:
+  - Product reference is not null
+  - Quantity is greater than zero
+- Delegates stock increase to the product
+
+## Validation Strategy
+
+Validation occurs at multiple layers for different reasons:
+
+- **Domain Layer (Product)**:
+  - Protects data integrity
+  - Enforces invariants such as non-negative stock
+
+- **Service Layer (InventoryService)**:
+  - Validates method inputs
+  - Represents business transaction rules
+  - Coordinates operations safely
+
+This approach avoids duplication while maintaining clear separation of responsibility.
+
+## Exception Handling Philosophy
+
+- Domain and service methods throw unchecked exceptions (IllegalArgumentException) when validation fails
+- Exceptions propagate naturally to calling layers
+- Try/catch blocks are reserved for application boundaries (UI, API, controllers), not core business logic
+
 ### Project Structure
 
 ```text
@@ -161,12 +316,19 @@ apex-retail-system/
 │   │           └── apexretail/
 │   │               ├── diagnostics/
 │   │               │   └── SystemInfo.java
-│   │               └── utilities/
-│   │                   └── TemperatureConverter.java
+│   │               ├── utilities/
+│   │               │   └── TemperatureConverter.java
+│   │               ├── domain/
+│   │               │   ├── Product.java
+│   │               │   └── Category.java
+│   │               └── service/
+│   │                   └── InventoryService.java
 │   └── test/
 │       └── java/
-│           └── com/apexretail/utilities/
-│               └── TemperatureConverterTest.java
+│           └── com/
+│               └── apexretail/
+│                   └── utilities/
+│                       └── TemperatureConverterTest.java
 ├── pom.xml
 └── README.md
 ```
