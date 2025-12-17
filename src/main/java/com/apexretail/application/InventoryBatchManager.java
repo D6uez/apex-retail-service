@@ -111,6 +111,7 @@ public class InventoryBatchManager {
                 System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
             }
         }
+        keyboard.close();
     }
 
     /**
