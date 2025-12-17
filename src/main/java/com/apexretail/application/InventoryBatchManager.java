@@ -16,18 +16,6 @@ import com.apexretail.service.InventoryService;
  * or restock products, with all operations validated and managed through
  * the service layer.
  *
- * <p>
- * Example interaction:
- * 
- * <pre>{@code
- * Welcome, would you like to process an order? Please choose: Sell, Restock, or Exit
- * Sell
- * Processing sell...
- * How many would you like to sell?
- * 5
- * (Product sold successfully)
- * }</pre>
- *
  * @author David
  * @version 1.0.0
  */
@@ -50,28 +38,76 @@ public class InventoryBatchManager {
         InventoryService invServiceObj = new InventoryService();
         boolean processRunning = true;
 
+        // Main application loop - continues until user chooses "Exit"
         while (processRunning) {
             System.out.println("Welcome, would you like to process an order? Please choose: Sell, Restock, or Exit");
             String choice = keyboard.nextLine();
 
+            // First-level validation: check if choice is valid
             if (isValidChoice(choice)) {
+                // Exit branch: terminates the application loop
                 if (choice.equalsIgnoreCase("Exit")) {
                     System.out.println("Goodbye!");
                     processRunning = false;
-                } else if (choice.equalsIgnoreCase("Sell")) {
+                }
+                // Sell branch: process product sale
+                else if (choice.equalsIgnoreCase("Sell")) {
+                    int quantity;
                     System.out.println("Processing sell...");
                     System.out.println("How many would you like to sell?");
-                    int quantity = keyboard.nextInt();
-                    if (isValidStockAdjustment(quantity)) {
-                        invServiceObj.sellProduct(validProduct, quantity);
+
+                    // Validate input is an integer before proceeding
+                    if (keyboard.hasNextInt()) {
+                        quantity = keyboard.nextInt();
+                        keyboard.nextLine(); // Clear the newline character
+
+                        // Second-level validation: check if quantity is positive
+                        if (isValidStockAdjustment(quantity)) {
+                            // Delegate to service layer - may throw exceptions for business rules
+                            invServiceObj.sellProduct(validProduct, quantity);
+                            System.out.println("Sold " + quantity + " of " + validProduct.getName() + ".");
+                            System.out.println(validProduct.getQuantityInStock() + " remaining in stock.");
+                        } else {
+                            // Invalid quantity: not positive
+                            System.out.println("Error: Quantity must be greater than 0.");
+                        }
                     } else {
-                        System.out.println("Error: Quantity must be greater than 0.");
+                        // Invalid input: not an integer
+                        System.out.println("Please enter a valid number.");
+                        keyboard.nextLine(); // Clear invalid input
+                        continue; // Return to main menu
                     }
-                } else if (choice.equalsIgnoreCase("Restock")) {
+                }
+                // Restock branch: process inventory restocking
+                else if (choice.equalsIgnoreCase("Restock")) {
+                    int quantity;
                     System.out.println("Processing restock...");
-                    // TODO: Implement restock functionality
+                    System.out.println("How many would you like to restock?");
+
+                    // Validate input is an integer before proceeding
+                    if (keyboard.hasNextInt()) {
+                        quantity = keyboard.nextInt();
+                        keyboard.nextLine(); // Clear the newline character
+
+                        // Second-level validation: check if quantity is positive
+                        if (isValidStockAdjustment(quantity)) {
+                            // Delegate to service layer
+                            invServiceObj.restockProduct(validProduct, quantity);
+                            System.out.println("Restocked " + quantity + " of " + validProduct.getName() + ".");
+                            System.out.println(validProduct.getQuantityInStock() + " remaining in stock.");
+                        } else {
+                            // Invalid quantity: not positive
+                            System.out.println("Error: Quantity must be greater than 0.");
+                        }
+                    } else {
+                        // Invalid input: not an integer
+                        System.out.println("Please enter a valid number.");
+                        keyboard.nextLine(); // Clear invalid input
+                        continue; // Return to main menu
+                    }
                 }
             } else {
+                // Invalid menu choice
                 System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
             }
         }
@@ -80,14 +116,6 @@ public class InventoryBatchManager {
     /**
      * Validates that the user's input matches one of the allowed commands.
      * 
-     * <p>
-     * Comparison is case-insensitive. Valid commands are:
-     * <ul>
-     * <li>"Sell" - Process a product sale</li>
-     * <li>"Restock" - Restock a product</li>
-     * <li>"Exit" - Terminate the application</li>
-     * </ul>
-     *
      * @param choice user input string to validate
      * @return true if the input matches a valid command, false otherwise
      */
@@ -100,12 +128,6 @@ public class InventoryBatchManager {
     /**
      * Validates that a stock adjustment quantity is positive.
      * 
-     * <p>
-     * This validation is performed at the application layer before
-     * passing the quantity to the service layer. Note that additional
-     * validation (e.g., checking stock availability) may still occur
-     * in the service layer.
-     *
      * @param amount quantity to validate
      * @return true if amount is greater than 0, false otherwise
      */
