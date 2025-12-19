@@ -33,8 +33,11 @@ public class InventoryBatchManager {
      */
     public static void main(String[] args) {
         Scanner keyboard = new Scanner(System.in);
+
+        // Creating valid Category and Product objects to simulate a transaction
         Category validCategory = new Category(1, "Produce", "Valid Produce");
         Product validProduct = new Product(1, "TestItem", BigDecimal.valueOf(5.00), 20, validCategory);
+
         InventoryService invServiceObj = new InventoryService();
         boolean processRunning = true;
 
