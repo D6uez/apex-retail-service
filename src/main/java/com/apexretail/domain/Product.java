@@ -79,6 +79,7 @@ public class Product {
      *                                  stock
      */
     public void decreaseStock(int amount) {
+        validateStockAdjustment(amount);
         hasSufficientStock(amount);
         this.quantityInStock -= amount;
     }
