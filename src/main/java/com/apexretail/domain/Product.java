@@ -92,7 +92,6 @@ public class Product {
      *                                  available stock
      */
     private void hasSufficientStock(int requestedAmount) {
-        validateInitialStock(requestedAmount);
         if (requestedAmount > this.quantityInStock) {
             throw new IllegalArgumentException("Requested amount exceeds amount in stock.");
         }
@@ -163,7 +162,7 @@ public class Product {
      *                                  whitespace
      */
     private void validateName(String pName) {
-        if (pName == null || pName.isBlank() || pName.isEmpty()) {
+        if (pName == null || pName.isBlank()) {
             throw new IllegalArgumentException("Invalid name.");
         }
     }
