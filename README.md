@@ -274,7 +274,7 @@ Replaces fixed data structures with dynamic collections using ArrayList.
 ---
 
 ## Project Structure
-
+```
 apex-retail-system/
 ├── src/
 │   ├── main/
@@ -300,6 +300,7 @@ apex-retail-system/
 │                       └── TemperatureConverterTest.java
 ├── pom.xml
 └── README.md
+```
 ---
 
 ## Development Philosophy
