@@ -2,312 +2,279 @@
 
 ## Project Overview
 
-**Apex Retail** is a comprehensive Inventory & Sales Management System designed to streamline retail operations, inventory tracking, and sales processing for small to medium-sized retail businesses.
+**Apex Retail** is an educational Inventory & Sales Management System developed incrementally to model real-world retail workflows while reinforcing core Java programming concepts.
 
-### System Purpose
+The system is intentionally built **chapter by chapter**, aligning strictly with textbook topics and progressively introducing architectural patterns used in production-grade software.
 
-This system provides retailers with a centralized platform to manage:
-
-- Product inventory and stock levels
-- Sales transactions and order processing
-- Customer information and purchase history
-- Supplier and vendor relationships
-- Business analytics and reporting
-
-### Target Beneficiaries
-
-- **Retail Business Owners** seeking to digitize and optimize their operations
-- **Store Managers** needing real-time inventory visibility
-- **Sales Associates** requiring fast and accurate point-of-sale functionality
-- **Business Analysts** looking for data-driven insights into sales performance
-
-### Future Capabilities
-
-The system will eventually include:
-
-- Real-time inventory tracking and automated reordering
-- Multi-channel sales integration (in-store, online, mobile)
-- Customer relationship management (CRM) features
-- Advanced reporting and analytics dashboard
-- Employee management and shift scheduling
-- Supplier management and purchase order processing
-- Barcode/QR code scanning capabilities
+This project emphasizes:
+- Correct object-oriented design
+- Data integrity and validation
+- Clear separation of responsibilities
+- Incremental complexity without overengineering
 
 ---
 
-## Chapter 1: SystemInfo Diagnostic Tool
+## System Purpose
+
+The system provides a controlled environment for exploring retail concepts such as:
+
+- Product and category modeling
+- Inventory tracking and stock adjustments
+- Sales and restocking workflows
+- Business-rule validation
+- Layered application design
+
+Each feature is introduced **only when the supporting language and design concepts have been covered**.
+
+---
+
+## Target Beneficiaries
+
+- **Learners** building strong Java fundamentals through applied projects
+- **Junior developers** practicing clean architecture and validation discipline
+- **Instructors or reviewers** evaluating incremental system design
+- **Portfolio reviewers** seeking evidence of structured problem-solving
+
+---
+
+## Chapter Progression Roadmap
+
+The system evolves through these textbook chapters:
+
+1. **Introduction to Computers and Java** - System configuration and environment validation
+2. **Java Fundamentals** - Core language syntax and utility classes
+3. **A First Look at Classes and Objects** - Domain modeling and encapsulation
+4. **Decision Structures** - Business logic and workflow coordination
+5. **Loops and Files** - Batch processing and data persistence
+6. **A Second Look at Classes and Objects** - Advanced object design
+7. **Arrays and the ArrayList Class** - Dynamic collections management
+8. **Text Processing and Wrapper Classes** - Data formatting and validation
+9. **Inheritance** - Hierarchical domain modeling
+10. **Exceptions and Advanced File I/O** - Robust error handling and data persistence
+11. **JavaFX: GUI Programming and Basic Controls** - Desktop application interface
+12. **JavaFX: Advanced Controls** - Sophisticated user interface components
+13. **JavaFX: Graphics, Effects, and Media** - Rich visual presentation
+14. **Recursion** - Advanced algorithms and data processing
+15. **Databases** - Persistent storage and data management
+
+---
+
+## Chapter 1: Introduction to Computers and Java
 
 ### Overview
+The **SystemInfo** diagnostic utility verifies that the development environment is correctly configured.
 
-The **SystemInfo** utility verifies that the development environment is properly configured.
+### Purpose
+- Confirm Java installation and version
+- Verify Maven project setup
+- Validate application entry-point execution
+- Establish a baseline executable program
 
-**Purpose:**
+---
 
-- Confirm Java installation and version compatibility
-- Verify Maven build tool functionality
-- Ensure project structure is set up correctly
-- Confirm development environment readiness
-
-### Running SystemInfo
-
-#### Prerequisites
-
-- Java 21 (LTS version)
-- Apache Maven 3.6 or later
-- Recommended IDE: IntelliJ IDEA, Eclipse, or VS Code with Java extensions
-
-#### Maven (Command Line)
-
-```bash
-cd path/to/apex-retail-system
-mvn clean compile exec:java
-```
-
-## IDE Instructions
-
-1. Open the project as a Maven project.
-2. Navigate to `src/main/java/com/apexretail/diagnostics/SystemInfo.java`.
-3. Run the `main` method:
-   - **IntelliJ:** Click the green play button.
-   - **Eclipse:** Right-click → Run As → Java Application.
-   - **VS Code:** Click Run or press F5.
-
-### Expected Output
-
-```text
-Developer: David
-Team: Apex Retail Solutions
-Project: Inventory & Sales Management System
-Java Version: 21.x.x
-Timestamp: 2024-01-15T10:30:00Z
-Application Version: 0.0.1
-```
-
-## Chapter 2: TemperatureConverter Utility
+## Chapter 2: Java Fundamentals
 
 ### Overview
+The **TemperatureConverter** utility demonstrates the construction of a reusable, fully validated utility class.
 
-The `TemperatureConverter` utility provides robust, reusable methods for converting temperatures between Celsius, Fahrenheit, and Kelvin.
+### Concepts Applied
+- Static utility methods
+- Constants and encapsulation
+- Input validation
+- Exception handling
+- Automated unit testing
 
-- **Purpose:** Demonstrate utility class development, input validation, and automated testing.
-- **Scope:** Can be integrated into real-world applications if temperature calculations are needed (e.g., temperature-sensitive inventory, shipping conditions).
+### Features
+Converts between:
+- Celsius ↔ Fahrenheit
+- Celsius ↔ Kelvin
+- Fahrenheit ↔ Kelvin
 
-### Utility Class: TemperatureConverter.java
+Enforces absolute zero constraints and throws `IllegalArgumentException` for invalid inputs.
 
-**Features:**
+---
 
-- Converts:
-  - Celsius ↔ Fahrenheit
-  - Celsius ↔ Kelvin
-  - Fahrenheit ↔ Kelvin
-  - Kelvin ↔ Fahrenheit
-- Validates inputs against **absolute zero**, throwing exceptions if violated.
-- Encapsulates constants as **private fields**.
-- Fully reusable and maintainable.
+## Chapter 3: A First Look at Classes and Objects
 
-**Example Usage:**
+### Overview
+Introduces the domain layer, modeling real-world business entities while enforcing strict invariants.
 
-```java
-double f = TemperatureConverter.celsiusToFahrenheit(100.0);
-double k = TemperatureConverter.celsiusToKelvin(0.0);
-double c = TemperatureConverter.fahrenheitToCelsius(32.0);
-```
+### Product Domain Object
+- Represents retail inventory items
+- Enforces data validation at creation
+- Manages inventory quantity safely
+- Prevents invalid states through encapsulation
 
-### Automated Testing: TemperatureConverterTest.java
-
-**Purpose:** Ensure correctness, robustness, and precision of the `TemperatureConverter` utility.
-
-**Test Coverage:**
-
-- Known conversions – water freezing/boiling points, human body temperature, absolute zero, room temperature.
-- Symmetry / Round-trip – C↔F↔C, C↔K↔C, F↔K↔F.
-- Absolute zero boundary checks – throws `IllegalArgumentException` below absolute zero.
-- Special double values – `NaN`, `POSITIVE_INFINITY`, `NEGATIVE_INFINITY`.
-- Extreme but valid values – `Double.MAX_VALUE` and minimal positive values.
-- Precision accumulation – 100 repeated round-trip conversions to detect floating-point drift.
-- Direct vs indirect consistency – F→K vs F→C→K comparison.
-- Zero and range testing – validates correct behavior across negative, zero, and positive temperatures.
-
-### Running Tests (JUnit 5 / Maven)
-
-```bash
-cd path/to/apex-retail-system
-mvn test
-```
-
-### Expected Output
-
-All tests pass without errors or failures.
-
-### Development Notes
-
-- Constants are **private**; tests validate behavior via public methods only.
-- Tests serve **development and QA purposes**; not included in production runtime.
-- Demonstrates **industry-standard practices**:
-  - Encapsulation
-  - Input validation
-  - Unit testing
-  - Edge-case handling
-  - Precision considerations
-
-# Chapter 3: Core Domain Models
-
-## Overview
-
-Chapter 3 introduces the core domain layer of the Apex Retail system. This layer models real-world business concepts using well-defined Java classes that enforce data integrity and business rules at the object level.
-
-The goal of this chapter is to ensure that domain objects are always created in a valid state and remain consistent throughout their lifecycle.
-
-## Domain Design Principles
-
-The following principles guide the domain model design:
-
-- Domain objects are responsible for validating their own data
-- Validation occurs at construction time
-- Objects must never exist in an invalid state
-- Fields are encapsulated and accessed through getters
-- Immutability is preferred where applicable
-- Business rules are kept close to the data they protect
-
-## Product Domain Object
-
-The Product class represents an item managed within the retail inventory system.
-
-### Responsibilities
-
-- Store product identity and attributes
-- Validate all incoming data at creation time
-- Manage inventory quantity safely
-- Enforce stock-related business rules
-
-### Core Attributes
-
-- Unique product identifier
-- Product name
-- Product price
-- Quantity currently in stock
-- Product category
-
-### Validation Rules
-
-- ID must be non-negative
-- Name must not be null, empty, or blank
-- Price must be zero or greater
-- Initial stock quantity must be zero or greater
-- Category must not be null
-
-All validation is performed inside the constructor to ensure that a Product instance can never be created in an invalid state.
-
-### Inventory Behavior
-
-The Product class manages its own inventory state, including:
-
-- Increasing stock quantity
-- Decreasing stock quantity
-- Preventing stock from dropping below zero
-- Determining whether the product is currently in stock
-
-Inventory-related validation is enforced internally to guarantee consistency regardless of where the product is used.
-
-## Category Domain Object
-
-The Category class represents a logical grouping of products within the system.
-
-### Responsibilities
-
-- Classify products for organization and reporting
-- Provide a stable and immutable identifier for grouping
-
-### Core Attributes
-
-- Unique category identifier
-- Category name
-- Optional category description
-
-### Validation Rules
-
-- ID must be valid
-- Name must not be null or blank
-- Description is optional
-
-### Design Characteristics
-
+### Category Domain Object
+- Classifies products logically
 - Immutable after creation
-- Getters only
-- Equality based solely on ID
-- Overrides equals(), hashCode(), and toString()
+- Provides stable grouping for reporting
+- Overrides `equals()`, `hashCode()`, and `toString()`
 
-# Chapter 4: Inventory Service & Decision Structures
+---
 
-## Overview
+## Chapter 4: Decision Structures
 
-Chapter 4 introduces the service layer and applies decision structures to implement business operations that coordinate domain objects.
+### Overview
+Introduces the service layer, coordinating domain objects using decision structures.
 
-This chapter focuses on separating business workflow logic from domain data integrity, while ensuring validations occur at the correct layer.
+### InventoryService
+- Coordinates product inventory operations
+- Validates transaction-level inputs
+- Delegates stock changes to domain objects
+- Implements sell and restock operations with business logic
 
-## Service Layer Purpose
+### Validation Strategy
+Multi-layer validation with domain, service, and application layers each handling appropriate validation concerns.
 
-The service layer is responsible for:
+---
 
-- Coordinating domain objects
-- Enforcing transaction-level business rules
-- Validating inputs before invoking domain behavior
-- Representing real-world business actions
+## Chapter 5: Loops and Files
 
-## InventoryService
+### Overview
+Introduces iterative processing through a menu-driven batch application with file-based data persistence.
 
-The InventoryService manages inventory-related business operations for products.
+### Concepts Applied
+- Sentinel-controlled loops
+- File I/O operations
+- Transaction logging
+- Batch processing with re-prompting on invalid input
 
-### Responsibilities
+### InventoryBatchManager
+Interactive command-line interface supporting:
+- Sell and restock operations with file persistence
+- Transaction history tracking
+- Graceful exit with summary reporting
 
-- Sell products by reducing stock
-- Restock products by increasing inventory
-- Validate inputs before performing operations
-- Delegate stock management to the Product domain object
+---
 
-### Key Operations
+## Chapter 6: A Second Look at Classes and Objects
 
-#### Sell Product
+### Overview
+Revisits class design with deeper focus on object integrity and composition.
 
-- Accepts a Product and a requested quantity
-- Validates:
-  - Product reference is not null
-  - Quantity requested is greater than zero
-- Delegates stock reduction to the product
-- Relies on domain-level validation to prevent invalid stock changes
+### Concepts Reviewed
+- Constructor overloading
+- Defensive copying
+- Aggregate classes
+- Immutability vs mutability patterns
 
-#### Restock Product
+### Design Decisions
+- Domain objects validate data at construction
+- No-argument constructors intentionally omitted
+- Mutators limited to protect invariants
+- Objects cannot exist in partially valid states
 
-- Accepts a Product and a quantity to add
-- Validates:
-  - Product reference is not null
-  - Quantity is greater than zero
-- Delegates stock increase to the product
+---
 
-## Validation Strategy
+## Chapter 7: Arrays and the ArrayList Class
 
-Validation occurs at multiple layers for different reasons:
+### Overview
+Replaces fixed data structures with dynamic collections using ArrayList.
 
-- **Domain Layer (Product)**:
-  - Protects data integrity
-  - Enforces invariants such as non-negative stock
+### Concepts Applied
+- Dynamic collection management
+- Index-based selection with bounds checking
+- Iteration using enhanced for-loops
+- Collection-backed inventory modeling
 
-- **Service Layer (InventoryService)**:
-  - Validates method inputs
-  - Represents business transaction rules
-  - Coordinates operations safely
+### Implementation Notes
+- Inventory stored in `ArrayList<Product>`
+- Input validation ensures safe collection access
+- Standard collections preferred over custom implementations
 
-This approach avoids duplication while maintaining clear separation of responsibility.
+---
 
-## Exception Handling Philosophy
+## Chapter 8: Text Processing and Wrapper Classes
 
-- Domain and service methods throw unchecked exceptions (IllegalArgumentException) when validation fails
-- Exceptions propagate naturally to calling layers
-- Try/catch blocks are reserved for application boundaries (UI, API, controllers), not core business logic
+### Planned Features
+- Product descriptions with formatted text
+- Barcode/ID validation using regular expressions
+- Price formatting and currency handling
+- Wrapper class usage for optional values
+- Enhanced reporting with formatted output
 
-### Project Structure
+---
 
-```text
+## Chapter 9: Inheritance
+
+### Planned Features
+- Hierarchical product categorization
+- Abstract product types with shared behavior
+- Specialized product subclasses with unique attributes
+- Polymorphic inventory management
+- Method overriding for specialized business logic
+
+---
+
+## Chapter 10: Exceptions and Advanced File I/O
+
+### Planned Features
+- Custom exception hierarchy for business errors
+- Transaction rollback on failure
+- Comprehensive error logging
+- Binary data serialization for performance
+- CSV/JSON import/export capabilities
+
+---
+
+## Chapter 11: JavaFX: GUI Programming and Basic Controls
+
+### Planned Features
+- Desktop application with graphical interface
+- Basic form controls for inventory management
+- Real-time inventory display
+- Tabbed interface for different workflows
+- Responsive layout design
+
+---
+
+## Chapter 12: JavaFX: Advanced Controls
+
+### Planned Features
+- Data tables with sorting and filtering
+- Chart visualizations for sales trends
+- Searchable product catalogs
+- Dialog boxes for user confirmation
+- Custom styled components
+
+---
+
+## Chapter 13: JavaFX: Graphics, Effects, and Media
+
+### Planned Features
+- Product image display and management
+- Animations for inventory changes
+- Visual effects for alerts and notifications
+- Dashboard with graphical metrics
+- Enhanced user experience through multimedia
+
+---
+
+## Chapter 14: Recursion
+
+### Planned Features
+- Recursive inventory categorization
+- Hierarchical reporting structures
+- Advanced search algorithms
+- Complex discount calculation
+- Tree-based organization of product relationships
+
+---
+
+## Chapter 15: Databases
+
+### Planned Features
+- SQLite database integration
+- JDBC-based data persistence
+- CRUD operations for all domain objects
+- Transaction management with ACID compliance
+- Database-backed reporting and analytics
+
+---
+
+## Project Structure
+
 apex-retail-system/
 ├── src/
 │   ├── main/
@@ -321,8 +288,10 @@ apex-retail-system/
 │   │               ├── domain/
 │   │               │   ├── Product.java
 │   │               │   └── Category.java
-│   │               └── service/
-│   │                   └── InventoryService.java
+│   │               ├── service/
+│   │               │   └── InventoryService.java
+│   │               └── application/
+│   │                   └── InventoryBatchManager.java
 │   └── test/
 │       └── java/
 │           └── com/
@@ -331,10 +300,21 @@ apex-retail-system/
 │                       └── TemperatureConverterTest.java
 ├── pom.xml
 └── README.md
-```
+---
 
-### Development Team
+## Development Philosophy
 
-- **Primary Developer & Maintainer:** David
-- **Team:** Apex Retail Solutions
-- **Contact:** Internal repository/team directory
+- **Progressive Disclosure**: Features implemented only after corresponding textbook chapters
+- **No Premature Optimization**: Avoid frameworks until language fundamentals are mastered
+- **Clarity Over Cleverness**: Readable, maintainable code preferred over "smart" solutions
+- **Validation First**: Data integrity and error handling prioritized from the start
+- **Real-World Relevance**: Practical retail scenarios guide implementation choices
+
+---
+
+## Development Team
+
+- **Primary Developer**: David
+- **Team**: Apex Retail Solutions
+- **Project Type**: Educational / Portfolio Development
+- **Pedagogical Approach**: Textbook-aligned incremental system design
