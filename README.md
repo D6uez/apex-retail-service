@@ -314,12 +314,12 @@ apex-retail-system/
 ---
 
 ## Development Team
-### Disclaimer
-*Note: 'Apex Retail Solutions' is a fictional name created for this educational project.*
 
 - **Primary Developer**: David
 - **Team**: Apex Retail Solutions
 - **Project Type**: Educational / Portfolio Development
 - **Pedagogical Approach**: Textbook-aligned incremental system design
 
-"Note: 'Apex Retail Solutions' is a fictional name created for this educational project."
+---
+### Disclaimer
+*Note: 'Apex Retail Solutions' is a fictional name created for this educational project.*
