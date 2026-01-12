@@ -52,17 +52,16 @@ public class InventoryBatchManager {
         // Main application loop - continues until user chooses "Exit"
         while (processRunning) {
             System.out.println("Welcome, would you like to process an order? Please choose: Sell, Restock, or Exit");
-            String choice = keyboard.nextLine();
+            String choice = normalizeCommand(keyboard.nextLine());
 
             // First-level validation: check if choice is valid
             if (isValidChoice(choice)) {
                 // Exit branch: terminates the application loop
-                if (choice.equalsIgnoreCase("Exit")) {
-                    System.out.println("Goodbye!");
+                if (choice.equals("exit")) {
                     processRunning = false;
                 }
                 // Sell branch: process product sale
-                else if (choice.equalsIgnoreCase("Sell")) {
+                else if (choice.equals("sell")) {
                     int productChoice;
                     int quantity;
                     Product validProduct;
@@ -107,10 +106,9 @@ public class InventoryBatchManager {
                         keyboard.nextLine();
                         continue;
                     }
-
                 }
                 // Restock branch: process inventory restocking
-                else if (choice.equalsIgnoreCase("Restock")) {
+                else if (choice.equals("restock")) {
                     int productChoice;
                     int quantity;
                     Product validProduct;
@@ -156,18 +154,19 @@ public class InventoryBatchManager {
                         keyboard.nextLine();
                         continue;
                     }
-                } else {
-                    // Invalid menu choice
-                    System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
                 }
+
+            } else {
+                // Invalid menu choice
+                System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
             }
         }
         keyboard.close();
         System.out.printf(
                 "Thank you for using Apex service: Here is a summary of your usage today%nNumber of sell operations: %d"
-                        +
-                        "%nTotal number of units sold: %d%nNumber of restock operations: %d%nTotal number of units restocked: %d%nHave a nice day! :)",
+                        + "%nTotal number of units sold: %d%nNumber of restock operations: %d%nTotal number of units restocked: %d%nHave a nice day! :)",
                 sellCount, unitsSold, restockCount, unitsRestocked);
+
     }
 
     private static void displayInventory(ArrayList<Product> currentInventory) {
@@ -177,6 +176,13 @@ public class InventoryBatchManager {
         }
     }
 
+    private static String normalizeCommand(String input) {
+        if (input == null || input.isBlank()) {
+            return "";
+        }
+        return input.trim().toLowerCase();
+    }
+
     /**
      * Validates that the user's input matches one of the allowed commands.
      * 
@@ -184,9 +190,9 @@ public class InventoryBatchManager {
      * @return true if the input matches a valid command, false otherwise
      */
     private static boolean isValidChoice(String choice) {
-        return choice.equalsIgnoreCase("Sell") ||
-                choice.equalsIgnoreCase("Restock") ||
-                choice.equalsIgnoreCase("Exit");
+        return choice.equals("sell") ||
+                choice.equals("restock") ||
+                choice.equals("exit");
     }
 
     /**
@@ -198,5 +204,4 @@ public class InventoryBatchManager {
     private static boolean isValidStockAdjustment(int amount) {
         return amount > 0;
     }
-
 }
