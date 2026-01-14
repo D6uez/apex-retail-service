@@ -27,9 +27,19 @@ public class InventoryBatchManager {
      * Main entry point for the inventory batch management application.
      * 
      * <p>
-     * Initializes a sample product and runs an interactive loop that
+     * Initializes a sample inventory and runs an interactive loop that
      * prompts users for inventory operations. Validates all user inputs
      * before performing operations and provides appropriate feedback.
+     * Uses consolidated counters array to track transaction metrics.
+     *
+     * <p>
+     * Counters array structure:
+     * <ul>
+     * <li>index 0: sell operation count</li>
+     * <li>index 1: total units sold</li>
+     * <li>index 2: restock operation count</li>
+     * <li>index 3: total units restocked</li>
+     * </ul>
      *
      * @param args command-line arguments (not used in this application)
      */
@@ -48,7 +58,9 @@ public class InventoryBatchManager {
         InventoryService invServiceObj = new InventoryService();
         boolean processRunning = true;
 
-        int sellCount = 0, restockCount = 0, unitsSold = 0, unitsRestocked = 0;
+        // Consolidated transaction counters array [sellCount, unitsSold, restockCount,
+        // unitsRestocked]
+        int[] counters = new int[4];
 
         // Main application loop - continues until user chooses "Exit"
         while (processRunning) {
@@ -56,76 +68,84 @@ public class InventoryBatchManager {
             String choice = normalizeCommand(keyboard.nextLine());
 
             // First-level validation: check if choice is valid
-            if (isValidChoice(choice)) {
-                // Exit branch: terminates the application loop
-                if (choice.equals("exit")) {
-                    processRunning = false;
-                }
-                // Sell branch: process product sale
-                else if (choice.equals("sell")) {
-                    Integer quantity;
-                    System.out.println("Processing sell...");
-                    System.out.println("Which product would you like to sell? Enter the Product number:");
-                    Product validProduct = readProductSelection(keyboard, currentInventory);
-                    if (validProduct == null) {
-                        System.out.println("Invalid product selection.");
-                    } else {
-                        System.out.println("How many would you like to sell?");
-
-                        // Validate input is an integer before proceeding
-                        quantity = readPositiveInt(keyboard);
-                        if (quantity == null) {
-                            // Invalid input: not an integer
-                            System.out.println("Please enter a valid quantity.");
-                            continue; // Return to main menu
-                        }
-                        // Delegate to service layer - may throw exceptions for business rules
-                        invServiceObj.sellProduct(validProduct, quantity);
-                        System.out.println("Sold " + quantity + " of " + validProduct.getName() + ".");
-                        System.out.println(validProduct.getQuantityInStock() + " remaining in stock.");
-                        sellCount++;
-                        unitsSold += quantity;
-
-                    }
-
-                }
-                // Restock branch: process inventory restocking
-                else if (choice.equals("restock")) {
-                    Integer quantity;
-                    System.out.println("Processing restock...");
-                    System.out.println("Which product would you like to restock? Enter the Product number:");
-                    Product validProduct = readProductSelection(keyboard, currentInventory);
-                    if (validProduct == null) {
-                        System.out.println("Invalid product selection.");
-                    } else {
-                        System.out.println("How many would you like to restock?");
-
-                        // Validate input is an integer before proceeding
-                        quantity = readPositiveInt(keyboard);
-                        if (quantity == null) {
-                            // Invalid input: not an integer
-                            System.out.println("Please enter a valid quantity.");
-                            continue; // Return to main menu
-                        }
-                        // Delegate to service layer
-                        invServiceObj.restockProduct(validProduct, quantity);
-                        System.out.println("Restocked " + quantity + " of " + validProduct.getName() + ".");
-                        System.out.println(validProduct.getQuantityInStock() + " remaining in stock.");
-                        restockCount++;
-                        unitsRestocked += quantity;
-                    }
-                }
-
-            } else {
-                // Invalid menu choice
+            if (!isValidChoice(choice)) {
                 System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
+                continue; // Return to start of loop for new input
+            }
+
+            // Exit branch: terminates the application loop
+            if (choice.equals("exit")) {
+                processRunning = false;
+            }
+            // Sell branch: process product sale
+            else if (choice.equals("sell")) {
+                processInventoryAction(keyboard, currentInventory, invServiceObj, choice, counters);
+            }
+            // Restock branch: process inventory restocking
+            else if (choice.equals("restock")) {
+                processInventoryAction(keyboard, currentInventory, invServiceObj, choice, counters);
             }
         }
         keyboard.close();
         System.out.printf(
                 "Thank you for using Apex service: Here is a summary of your usage today%nNumber of sell operations: %d"
                         + "%nTotal number of units sold: %d%nNumber of restock operations: %d%nTotal number of units restocked: %d%nHave a nice day! :)",
-                sellCount, unitsSold, restockCount, unitsRestocked);
+                counters[0], counters[1], counters[2], counters[3]);
+
+    }
+
+    /**
+     * Processes an inventory transaction (sell or restock) based on user input.
+     * 
+     * <p>
+     * This method consolidates the common workflow for both sell and restock
+     * operations,
+     * including product selection, quantity validation, service layer delegation,
+     * and transaction tracking. The action parameter determines which service
+     * method
+     * to call and which counters to update.
+     *
+     * <p>
+     * The counters array is updated as follows based on the action:
+     * <ul>
+     * <li>For "sell": counters[0] (sell count) and counters[1] (units sold) are
+     * updated</li>
+     * <li>For "restock": counters[2] (restock count) and counters[3] (units
+     * restocked) are updated</li>
+     * </ul>
+     *
+     * @param keyboard  Scanner for reading user input
+     * @param inventory List of available products
+     * @param service   InventoryService instance for business logic operations
+     * @param action    The transaction type ("sell" or "restock")
+     * @param counters  Array containing transaction counters [sellCount, unitsSold,
+     *                  restockCount, unitsRestocked]
+     */
+    private static void processInventoryAction(Scanner keyboard, ArrayList<Product> inventory, InventoryService service,
+            String action, int[] counters) {
+        Product validProduct = readProductSelection(keyboard, inventory);
+        if (validProduct == null) {
+            System.out.println("Invalid product selection.");
+            return; // Return to main menu for new selection
+        }
+        System.out.printf("How many would you like to %s?%n", action);
+        Integer quantity = readPositiveInt(keyboard);
+        if (quantity == null) {
+            System.out.println("Please enter a valid quantity.");
+            return;
+        }
+        if ("sell".equals(action)) {
+            service.sellProduct(validProduct, quantity);
+            counters[0]++;
+            counters[1] += quantity;
+        } else {
+            service.restockProduct(validProduct, quantity);
+            counters[2]++;
+            counters[3] += quantity;
+        }
+        System.out.printf("%s %d of %s.%n%d remaining in stock.%n",
+                action.substring(0, 1).toUpperCase() + action.substring(1),
+                quantity, validProduct.getName(), validProduct.getQuantityInStock());
 
     }
 
