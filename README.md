@@ -187,34 +187,46 @@ Replaces fixed data structures with dynamic collections using ArrayList.
 
 ## Chapter 8: Text Processing and Wrapper Classes
 
-### Planned Features
-- Product descriptions with formatted text
-- Barcode/ID validation using regular expressions
-- Price formatting and currency handling
-- Wrapper class usage for optional values
-- Enhanced reporting with formatted output
+### Overview
+Chapter 8 focuses on robust data handling by implementing text processing techniques and leveraging wrapper classes for type-safe validation and conversion. These concepts are applied to enhance the inventory system's file I/O operations and data integrity.
+
+### Features Implemented
+- **CSV Text Processing**: Parses and writes inventory data using comma-separated values format with `String.split()` and formatted output
+- **Wrapper Class Validation**: Uses `Long.parseLong()` and `Integer.parseInt()` with exception handling for safe ID and quantity conversion
+- **Decimal Precision**: Employs `BigDecimal` for exact price representation and formatting with `toPlainString()`
+- **Formatted Reporting**: Implements consistent inventory display using `printf()` with tabular formatting
+- **Data Sanitization**: Trims and validates user input strings to prevent processing errors
 
 ---
 
-## Chapter 9: Inheritance
+## Chapter 9: Inheritance, Abstract Classes, and Interfaces
 
-### Planned Features
-- Hierarchical product categorization
-- Abstract product types with shared behavior
-- Specialized product subclasses with unique attributes
-- Polymorphic inventory management
-- Method overriding for specialized business logic
+### Overview
+Chapter 9 explores object-oriented design principles by creating a hierarchy for a notification system. This practice focuses on defining contracts with interfaces, providing shared behavior through abstract classes, and enabling polymorphism through concrete subclass implementations.
+
+### Features Implemented
+- **Interface Definition**: Created a `Notifiable` interface with a `send()` method to establish a common contract.
+- **Abstract Base Class**: Built an abstract `Notification` class implementing the interface to provide shared structure.
+- **Concrete Subclasses**: Extended functionality with specialized classes like `EmailNotification` and `SMSNotification`.
+- **Polymorphism**: Practiced using base class references (`Notification`) to point to various subclass instances.
+- **Method Specialization**: Utilized abstract methods and overrides to define specific behavior in each concrete class.
+
+**Note:** These inheritance and interface structures were implemented as standalone practice exercises and are not yet integrated into the main Point of Sale system.
 
 ---
 
 ## Chapter 10: Exceptions and Advanced File I/O
 
-### Planned Features
-- Custom exception hierarchy for business errors
-- Transaction rollback on failure
-- Comprehensive error logging
-- Binary data serialization for performance
-- CSV/JSON import/export capabilities
+### Overview
+Chapter 10 integrates persistent data storage by refactoring file operations into a dedicated repository layer. This implements robust error handling for file operations and data parsing, ensuring the inventory system can reliably save and load state between sessions.
+
+### Features Implemented
+- **Repository Pattern**: Centralized file operations in `InventoryFileRepository` for separation of concerns.
+- **CSV Data Persistence**: Implemented `writeFile()` and `loadInventory()` methods for saving/loading inventory to `inventoryFile.csv`.
+- **Data Mapping & Parsing**: Converted CSV string rows into validated `Product` objects using `Long.parseLong()`, `Integer.parseInt()`, and `BigDecimal` constructors.
+- **Comprehensive Error Handling**: Used try-catch blocks and `throws IOException` declarations to manage `FileNotFoundException`, `NumberFormatException`, and malformed data scenarios.
+- **Resource Management**: Applied try-with-resources statements to ensure `PrintWriter` and `Scanner` objects are closed automatically.
+- **Orchestration Logic**: Designed the application layer (`InventoryBatchManager`) to decide when to load from file or initialize a default inventory, keeping business logic separate from data access.
 
 ---
 
