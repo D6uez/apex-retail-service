@@ -13,7 +13,7 @@ import java.math.BigDecimal;
  * Example:
  * 
  * <pre>{@code
- * Product laptop = new Product(1001, "Laptop", new BigDecimal("999.99"), 10, Category.ELECTRONICS);
+ * Product laptop = new Product(1001, "Laptop", new BigDecimal("999.99"), 10, "Electronics");
  * }</pre>
  *
  * @author David
@@ -33,8 +33,11 @@ public class Product {
     /** Current quantity available in inventory. */
     private int quantityInStock;
 
-    /** Product classification category. */
-    private Category category;
+    /** Product classification category stored as a String. */
+    // NOTE: Category is currently persisted as String.
+    // Will be replaced with Category rehydration when domain model is finalized.
+
+    private String category;
 
     /**
      * Creates a new product with validated attributes.
@@ -43,10 +46,10 @@ public class Product {
      * @param pName            product name (cannot be null, empty, or blank)
      * @param pPrice           product price (must be ≥ 0)
      * @param pQuantityInStock initial stock quantity (must be ≥ 0)
-     * @param pCategory        product category (cannot be null)
+     * @param pCategory        product category as a String (cannot be null)
      * @throws IllegalArgumentException if any parameter fails validation
      */
-    public Product(long pId, String pName, BigDecimal pPrice, int pQuantityInStock, Category pCategory) {
+    public Product(long pId, String pName, BigDecimal pPrice, int pQuantityInStock, String pCategory) {
         validateID(pId);
         validateName(pName);
         validatePrice(pPrice);
@@ -124,7 +127,7 @@ public class Product {
      * @param pCategory category to validate
      * @throws IllegalArgumentException if category is null
      */
-    private void validateCategory(Category pCategory) {
+    private void validateCategory(String pCategory) {
         if (pCategory == null) {
             throw new IllegalArgumentException("Category must not be NULL.");
         }
@@ -216,11 +219,18 @@ public class Product {
     }
 
     /**
-     * Returns the product category.
+     * Returns the product category as a String.
      * 
-     * @return product category
+     * @return product category string
      */
-    public Category getCategory() {
+    public String getCategory() {
         return category;
     }
+
+    @Override
+    public String toString() {
+        return "Product [id=" + id + ", name=" + name + ", price=" + price + ", quantityInStock=" + quantityInStock
+                + ", category=" + category + "]";
+    }
+
 }

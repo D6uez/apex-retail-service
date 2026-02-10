@@ -2,10 +2,11 @@ package com.apexretail.application;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-import com.apexretail.domain.Category;
 import com.apexretail.domain.Product;
+import com.apexretail.repository.InventoryFileRepository;
 import com.apexretail.service.InventoryService;
 
 /**
@@ -17,6 +18,11 @@ import com.apexretail.service.InventoryService;
  * or restock products, with all operations validated and managed through
  * the service layer.
  *
+ * <p>
+ * The application now includes file persistence through
+ * InventoryFileRepository,
+ * loading inventory from CSV at startup and saving changes on exit.
+ *
  * @author David
  * @version 1.0.0
  */
@@ -27,10 +33,9 @@ public class InventoryBatchManager {
      * Main entry point for the inventory batch management application.
      * 
      * <p>
-     * Initializes a sample inventory and runs an interactive loop that
-     * prompts users for inventory operations. Validates all user inputs
-     * before performing operations and provides appropriate feedback.
-     * Uses consolidated counters array to track transaction metrics.
+     * Loads inventory from file, initializes with default products if empty,
+     * and runs an interactive loop for inventory operations. Saves inventory
+     * to file on exit.
      *
      * <p>
      * Counters array structure:
@@ -44,19 +49,25 @@ public class InventoryBatchManager {
      * @param args command-line arguments (not used in this application)
      */
     public static void main(String[] args) {
+        String fileName = "inventoryFile.csv";
         Scanner keyboard = new Scanner(System.in);
 
-        Category produceCategory = new Category(1, "Produce", "This category labels produce products.");
-        Category dairyCategory = new Category(2, "Dairy", "This category labels dairy products.");
-
-        ArrayList<Product> currentInventory = new ArrayList<Product>();
-        currentInventory.add(new Product(1, "Tomato", BigDecimal.valueOf(0.25), 30, produceCategory));
-        currentInventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, produceCategory));
-        currentInventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, dairyCategory));
-        currentInventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, dairyCategory));
-
-        InventoryService invServiceObj = new InventoryService();
         boolean processRunning = true;
+        List<Product> inventory = new ArrayList<Product>();
+        InventoryService invServiceObj = new InventoryService();
+        InventoryFileRepository inventoryRepo = new InventoryFileRepository();
+
+        try {
+            inventory = inventoryRepo.loadInventory(fileName);
+            if (inventory.isEmpty()) {
+                inventory.add(new Product(1, "Tomato", BigDecimal.valueOf(0.25), 30, "Produce"));
+                inventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, "Produce"));
+                inventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, "Dairy"));
+                inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
+            }
+        } catch (Exception e) {
+            System.out.println("Critical error loading inventory. Starting with empty inventory.");
+        }
 
         // Consolidated transaction counters array [sellCount, unitsSold, restockCount,
         // unitsRestocked]
@@ -75,15 +86,21 @@ public class InventoryBatchManager {
 
             // Exit branch: terminates the application loop
             if (choice.equals("exit")) {
+                try {
+                    inventoryRepo.writeFile(fileName, inventory);
+                    System.out.println("Inventory saved successfully.");
+                } catch (Exception e) {
+                    System.out.println("Saving inventory failed: " + e.getMessage());
+                }
                 processRunning = false;
             }
             // Sell branch: process product sale
             else if (choice.equals("sell")) {
-                processInventoryAction(keyboard, currentInventory, invServiceObj, choice, counters);
+                processInventoryAction(keyboard, inventory, invServiceObj, choice, counters);
             }
             // Restock branch: process inventory restocking
             else if (choice.equals("restock")) {
-                processInventoryAction(keyboard, currentInventory, invServiceObj, choice, counters);
+                processInventoryAction(keyboard, inventory, invServiceObj, choice, counters);
             }
         }
         keyboard.close();
@@ -99,34 +116,30 @@ public class InventoryBatchManager {
      * 
      * <p>
      * This method consolidates the common workflow for both sell and restock
-     * operations,
-     * including product selection, quantity validation, service layer delegation,
-     * and transaction tracking. The action parameter determines which service
-     * method
-     * to call and which counters to update.
+     * operations, including product selection, quantity validation, service
+     * layer delegation, and transaction tracking.
      *
      * <p>
-     * The counters array is updated as follows based on the action:
+     * The counters array is updated as follows:
      * <ul>
-     * <li>For "sell": counters[0] (sell count) and counters[1] (units sold) are
-     * updated</li>
+     * <li>For "sell": counters[0] (sell count) and counters[1] (units sold)</li>
      * <li>For "restock": counters[2] (restock count) and counters[3] (units
-     * restocked) are updated</li>
+     * restocked)</li>
      * </ul>
      *
      * @param keyboard  Scanner for reading user input
      * @param inventory List of available products
-     * @param service   InventoryService instance for business logic operations
+     * @param service   InventoryService for business logic operations
      * @param action    The transaction type ("sell" or "restock")
      * @param counters  Array containing transaction counters [sellCount, unitsSold,
      *                  restockCount, unitsRestocked]
      */
-    private static void processInventoryAction(Scanner keyboard, ArrayList<Product> inventory, InventoryService service,
+    private static void processInventoryAction(Scanner keyboard, List<Product> inventory, InventoryService service,
             String action, int[] counters) {
         Product validProduct = readProductSelection(keyboard, inventory);
         if (validProduct == null) {
             System.out.println("Invalid product selection.");
-            return; // Return to main menu for new selection
+            return;
         }
         System.out.printf("How many would you like to %s?%n", action);
         Integer quantity = readPositiveInt(keyboard);
@@ -161,7 +174,7 @@ public class InventoryBatchManager {
      * @param inventory List of available products
      * @return Selected Product object, or null if selection is invalid
      */
-    private static Product readProductSelection(Scanner scanner, ArrayList<Product> inventory) {
+    private static Product readProductSelection(Scanner scanner, List<Product> inventory) {
         displayInventory(inventory);
         Integer productChoice = readPositiveInt(scanner);
         if (productChoice == null || productChoice < UI_OFFSET || productChoice > inventory.size()) {
@@ -204,7 +217,7 @@ public class InventoryBatchManager {
      * 
      * @param currentInventory List of products to display
      */
-    private static void displayInventory(ArrayList<Product> currentInventory) {
+    private static void displayInventory(List<Product> currentInventory) {
         for (int i = 0; i < currentInventory.size(); i++) {
             System.out.printf("No: %d\tProduct: %s\tStock: %d%n", i + UI_OFFSET, currentInventory.get(i).getName(),
                     currentInventory.get(i).getQuantityInStock());
