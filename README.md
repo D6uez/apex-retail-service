@@ -186,47 +186,56 @@ Replaces fixed data structures with dynamic collections using ArrayList.
 ---
 
 ## Chapter 8: Text Processing and Wrapper Classes
-
 ### Overview
-Chapter 8 focuses on robust data handling by implementing text processing techniques and leveraging wrapper classes for type-safe validation and conversion. These concepts are applied to enhance the inventory system's file I/O operations and data integrity.
+Applies text processing and wrapper classes to strengthen data handling, validation, and formatting within the inventory system.
 
-### Features Implemented
-- **CSV Text Processing**: Parses and writes inventory data using comma-separated values format with `String.split()` and formatted output
-- **Wrapper Class Validation**: Uses `Long.parseLong()` and `Integer.parseInt()` with exception handling for safe ID and quantity conversion
-- **Decimal Precision**: Employs `BigDecimal` for exact price representation and formatting with `toPlainString()`
-- **Formatted Reporting**: Implements consistent inventory display using `printf()` with tabular formatting
-- **Data Sanitization**: Trims and validates user input strings to prevent processing errors
+### Concepts Applied
+- String manipulation and CSV format parsing
+- Data conversion and validation using wrapper classes (`Long`, `Integer`)
+- Precise decimal handling with `BigDecimal`
+- Formatted console output for reporting
+
+### Implementation Notes
+- Product data parsed from CSV strings using `split()` and wrapper class parsers (`Long.parseLong()`)
+- Prices stored and formatted as `BigDecimal` objects
+- Input validation leverages wrapper classes to catch `NumberFormatException`
+- Inventory display uses `printf()` for consistent, readable formatting
 
 ---
 
 ## Chapter 9: Inheritance, Abstract Classes, and Interfaces
-
 ### Overview
-Chapter 9 explores object-oriented design principles by creating a hierarchy for a notification system. This practice focuses on defining contracts with interfaces, providing shared behavior through abstract classes, and enabling polymorphism through concrete subclass implementations.
+Explores object-oriented design by building a notification class hierarchy separate from the main system, focusing on abstraction and polymorphism.
 
-### Features Implemented
-- **Interface Definition**: Created a `Notifiable` interface with a `send()` method to establish a common contract.
-- **Abstract Base Class**: Built an abstract `Notification` class implementing the interface to provide shared structure.
-- **Concrete Subclasses**: Extended functionality with specialized classes like `EmailNotification` and `SMSNotification`.
-- **Polymorphism**: Practiced using base class references (`Notification`) to point to various subclass instances.
-- **Method Specialization**: Utilized abstract methods and overrides to define specific behavior in each concrete class.
+### Concepts Applied
+- Interface creation to define contracts (`Notifiable`)
+- Abstract classes to provide shared implementation
+- Concrete subclassing for specialized behavior
+- Polymorphism through base class references
 
-**Note:** These inheritance and interface structures were implemented as standalone practice exercises and are not yet integrated into the main Point of Sale system.
+### Implementation Notes
+- Practice exercises created `EmailNotification` and `SMSNotification` as subclasses of an abstract `Notification` class
+- The `send()` method contract is defined in the `Notifiable` interface
+- **Note:** This structure is a practice module and is not yet integrated into the core Point of Sale application
 
 ---
 
 ## Chapter 10: Exceptions and Advanced File I/O
-
 ### Overview
-Chapter 10 integrates persistent data storage by refactoring file operations into a dedicated repository layer. This implements robust error handling for file operations and data parsing, ensuring the inventory system can reliably save and load state between sessions.
+Implements persistent data storage by creating a repository layer, introducing robust file operations and comprehensive error handling.
 
-### Features Implemented
-- **Repository Pattern**: Centralized file operations in `InventoryFileRepository` for separation of concerns.
-- **CSV Data Persistence**: Implemented `writeFile()` and `loadInventory()` methods for saving/loading inventory to `inventoryFile.csv`.
-- **Data Mapping & Parsing**: Converted CSV string rows into validated `Product` objects using `Long.parseLong()`, `Integer.parseInt()`, and `BigDecimal` constructors.
-- **Comprehensive Error Handling**: Used try-catch blocks and `throws IOException` declarations to manage `FileNotFoundException`, `NumberFormatException`, and malformed data scenarios.
-- **Resource Management**: Applied try-with-resources statements to ensure `PrintWriter` and `Scanner` objects are closed automatically.
-- **Orchestration Logic**: Designed the application layer (`InventoryBatchManager`) to decide when to load from file or initialize a default inventory, keeping business logic separate from data access.
+### Concepts Applied
+- Repository pattern for data access separation
+- Checked and unchecked exception handling
+- Try-with-resources for automatic stream management
+- Data mapping between CSV strings and domain objects
+
+### Implementation Notes
+- File operations centralized in `InventoryFileRepository`
+- `loadInventory()` reads and parses `inventoryFile.csv`, returning a `List<Product>`
+- `writeFile()` persists the current inventory list back to CSV
+- Malformed file data is caught and logged, preventing application crashes
+- The application layer decides when to load from file or use default data
 
 ---
 
