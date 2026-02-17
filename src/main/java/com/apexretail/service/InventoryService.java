@@ -1,6 +1,12 @@
 package com.apexretail.service;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.apexretail.domain.Product;
+import com.apexretail.repository.InventoryFileRepository;
 
 /**
  * Service for managing product inventory operations.
@@ -8,68 +14,110 @@ import com.apexretail.domain.Product;
  * <p>
  * This service provides business operations for inventory management,
  * including selling products and restocking inventory. All operations
- * validate their inputs before execution.
+ * validate their inputs before execution. Inventory data is loaded from
+ * and saved to persistent storage via a repository.
  *
  * <p>
  * Example:
  * 
  * <pre>{@code
- * InventoryService inventory = new InventoryService();
- * inventory.restockProduct(laptop, 5); // Add 5 units to stock
- * inventory.sellProduct(laptop, 2); // Sell 2 units
+ * InventoryFileRepository repo = new InventoryFileRepository();
+ * InventoryService inventory = new InventoryService(repo);
+ * inventory.restockProductByID(101L, 5); // Add 5 units to product with ID 101
+ * inventory.sellProductByID(101L, 2); // Sell 2 units
+ * inventory.saveInventory(); // Persist changes
  * }</pre>
  *
  * @author David
  * @version 1.0.0
  */
 public class InventoryService {
+    private InventoryFileRepository repository;
+    private final String FILE_NAME = "inventoryFile.csv";
+    private List<Product> inventory = new ArrayList<Product>();
 
     /**
-     * Sells a specified quantity of a product, reducing its stock.
+     * Constructs an InventoryService with the given repository.
+     * Loads inventory from file; creates default inventory if file is empty.
+     * 
+     * @param repo the repository for file operations
+     */
+    public InventoryService(InventoryFileRepository repo) {
+        this.repository = repo;
+        try {
+            inventory = repository.loadInventory(FILE_NAME);
+            if (inventory.isEmpty()) {
+                createDefaultInventory();
+            }
+        } catch (IOException e) {
+            System.out.println("Critical error loading inventory. Starting with empty inventory.");
+        }
+    }
+
+    /**
+     * Returns an unmodifiable view of the current inventory.
+     * 
+     * @return immutable copy of the inventory list
+     */
+    public List<Product> getReadOnlyInventory() {
+        return List.copyOf(inventory);
+    }
+
+    /**
+     * Sells a specified quantity of a product identified by its ID, reducing its
+     * stock.
      * 
      * <p>
-     * Validates the product and amount before calling the product's
-     * decreaseStock method. This operation is atomic and will only
-     * complete if sufficient stock is available.
+     * Validates the ID and amount, finds the product, and calls its decreaseStock
+     * method.
+     * This operation is atomic and will only complete if sufficient stock is
+     * available.
      *
-     * @param prod   product to sell (must not be null)
+     * @param id     product identifier (must not be null and must exist)
      * @param amount quantity to sell (must be > 0)
-     * @throws IllegalArgumentException if product is null or amount is invalid
+     * @throws IllegalArgumentException if id is null or not found, or amount is
+     *                                  invalid
      * @throws IllegalArgumentException if insufficient stock is available
      * @see Product#decreaseStock(int)
      */
-    public void sellProduct(Product prod, int amount) {
-        validateProduct(prod);
+    public void sellProductByID(Long id, int amount) {
+        validateID(id);
         validateStockAdjustment(amount);
-        prod.decreaseStock(amount);
+
+        Product product = findProductByID(id);
+        product.decreaseStock(amount);
     }
 
     /**
-     * Restocks a product by adding the specified quantity to inventory.
+     * Restocks a product identified by its ID, adding the specified quantity to
+     * inventory.
      * 
      * <p>
-     * Validates the product and amount before calling the product's
-     * increaseStock method.
+     * Validates the ID and amount, finds the product, and calls its increaseStock
+     * method.
      *
-     * @param prod   product to restock (must not be null)
+     * @param id     product identifier (must not be null and must exist)
      * @param amount quantity to add (must be > 0)
-     * @throws IllegalArgumentException if product is null or amount is invalid
+     * @throws IllegalArgumentException if id is null or not found, or amount is
+     *                                  invalid
      * @see Product#increaseStock(int)
      */
-    public void restockProduct(Product prod, int amount) {
-        validateProduct(prod);
+    public void restockProductByID(Long id, int amount) {
+        validateID(id);
         validateStockAdjustment(amount);
-        prod.increaseStock(amount);
+
+        Product product = findProductByID(id);
+        product.increaseStock(amount);
     }
 
     /**
-     * Validates that a product reference is not null.
+     * Validates that a product ID is not null.
      * 
-     * @param prod product to validate
-     * @throws IllegalArgumentException if product is null
+     * @param id product ID to validate
+     * @throws IllegalArgumentException if id is null
      */
-    private void validateProduct(Product prod) {
-        if (prod == null) {
+    private void validateID(Long id) {
+        if (id == null) {
             throw new IllegalArgumentException("Invalid product.");
         }
     }
@@ -84,5 +132,43 @@ public class InventoryService {
         if (!(amount > 0)) {
             throw new IllegalArgumentException("Quantity must be greater than 0.");
         }
+    }
+
+    /**
+     * Finds a product by its ID.
+     * 
+     * @param id product ID to search for
+     * @return the Product with matching ID
+     * @throws IllegalArgumentException if no product with given ID exists
+     */
+    private Product findProductByID(Long id) {
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.get(i).getId().equals(id)) {
+                return inventory.get(i);
+            }
+        }
+        throw new IllegalArgumentException("Product not found");
+    }
+
+    /**
+     * Saves the current inventory to persistent storage using the repository.
+     */
+    public void saveInventory() {
+        try {
+            repository.writeFile(FILE_NAME, inventory);
+            System.out.println("Inventory saved successfully.");
+        } catch (Exception e) {
+            System.out.println("Saving inventory failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Creates a default inventory with sample products.
+     */
+    private void createDefaultInventory() {
+        inventory.add(new Product(1, "Tomato", BigDecimal.valueOf(0.25), 30, "Produce"));
+        inventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, "Produce"));
+        inventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, "Dairy"));
+        inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
     }
 }

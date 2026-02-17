@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 public class Product {
 
     /** Unique product identifier - cannot be changed after creation. */
-    private final long id;
+    private final Long id;
 
     /** Product name. */
     private String name;
@@ -187,7 +187,7 @@ public class Product {
      * 
      * @return product ID
      */
-    public long getId() {
+    public Long getId() {
         return id;
     }
 

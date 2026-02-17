@@ -296,23 +296,29 @@ Implements persistent data storage by creating a repository layer, introducing r
 
 ## Project Structure
 ```
-apex-retail-system/
+APEX-RETAIL-SERVICE/
+├── .vscode/
+├── data/
+│   └── inventoryFile.csv
 ├── src/
 │   ├── main/
-│   │   └── java/
-│   │       └── com/
-│   │           └── apexretail/
-│   │               ├── diagnostics/
-│   │               │   └── SystemInfo.java
-│   │               ├── utilities/
-│   │               │   └── TemperatureConverter.java
-│   │               ├── domain/
-│   │               │   ├── Product.java
-│   │               │   └── Category.java
-│   │               ├── service/
-│   │               │   └── InventoryService.java
-│   │               └── application/
-│   │                   └── InventoryBatchManager.java
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── apexretail/
+│   │   │           ├── application/
+│   │   │           │   └── InventoryBatchManager.java
+│   │   │           ├── diagnostics/
+│   │   │           │   └── SystemInfo.java
+│   │   │           ├── domain/
+│   │   │           │   ├── Category.java
+│   │   │           │   └── Product.java
+│   │   │           ├── repository/
+│   │   │           │   └── InventoryFileRepository.java
+│   │   │           ├── service/
+│   │   │           │   └── InventoryService.java
+│   │   │           └── utilities/
+│   │   │               └── TemperatureConverter.java
+│   │   └── resources/
 │   └── test/
 │       └── java/
 │           └── com/
@@ -321,6 +327,7 @@ apex-retail-system/
 │                       └── TemperatureConverterTest.java
 ├── pom.xml
 └── README.md
+
 ```
 ---
 

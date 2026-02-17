@@ -1,7 +1,5 @@
 package com.apexretail.application;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -49,25 +47,9 @@ public class InventoryBatchManager {
      * @param args command-line arguments (not used in this application)
      */
     public static void main(String[] args) {
-        String fileName = "inventoryFile.csv";
         Scanner keyboard = new Scanner(System.in);
-
         boolean processRunning = true;
-        List<Product> inventory = new ArrayList<Product>();
-        InventoryService invServiceObj = new InventoryService();
-        InventoryFileRepository inventoryRepo = new InventoryFileRepository();
-
-        try {
-            inventory = inventoryRepo.loadInventory(fileName);
-            if (inventory.isEmpty()) {
-                inventory.add(new Product(1, "Tomato", BigDecimal.valueOf(0.25), 30, "Produce"));
-                inventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, "Produce"));
-                inventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, "Dairy"));
-                inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
-            }
-        } catch (Exception e) {
-            System.out.println("Critical error loading inventory. Starting with empty inventory.");
-        }
+        InventoryService invServiceObj = new InventoryService(new InventoryFileRepository());
 
         // Consolidated transaction counters array [sellCount, unitsSold, restockCount,
         // unitsRestocked]
@@ -86,21 +68,16 @@ public class InventoryBatchManager {
 
             // Exit branch: terminates the application loop
             if (choice.equals("exit")) {
-                try {
-                    inventoryRepo.writeFile(fileName, inventory);
-                    System.out.println("Inventory saved successfully.");
-                } catch (Exception e) {
-                    System.out.println("Saving inventory failed: " + e.getMessage());
-                }
+                invServiceObj.saveInventory();
                 processRunning = false;
             }
             // Sell branch: process product sale
             else if (choice.equals("sell")) {
-                processInventoryAction(keyboard, inventory, invServiceObj, choice, counters);
+                processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
             }
             // Restock branch: process inventory restocking
             else if (choice.equals("restock")) {
-                processInventoryAction(keyboard, inventory, invServiceObj, choice, counters);
+                processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
             }
         }
         keyboard.close();
@@ -148,11 +125,11 @@ public class InventoryBatchManager {
             return;
         }
         if ("sell".equals(action)) {
-            service.sellProduct(validProduct, quantity);
+            service.sellProductByID(validProduct.getId(), quantity);
             counters[0]++;
             counters[1] += quantity;
         } else {
-            service.restockProduct(validProduct, quantity);
+            service.restockProductByID(validProduct.getId(), quantity);
             counters[2]++;
             counters[3] += quantity;
         }
