@@ -11,15 +11,9 @@ import com.apexretail.service.InventoryService;
  * Interactive command-line inventory management application.
  * 
  * <p>
- * This application provides a user interface for processing inventory
- * transactions through a simple menu-driven interface. Users can sell
- * or restock products, with all operations validated and managed through
- * the service layer.
- *
- * <p>
- * The application now includes file persistence through
- * InventoryFileRepository,
- * loading inventory from CSV at startup and saving changes on exit.
+ * Provides a menu-driven interface for sell and restock operations.
+ * Inventory is loaded from persistent storage at startup and saved on exit,
+ * with business logic delegated to the service layer.
  *
  * @author David
  * @version 1.0.0
@@ -28,88 +22,71 @@ public class InventoryBatchManager {
     private final static int UI_OFFSET = 1;
 
     /**
-     * Main entry point for the inventory batch management application.
+     * Main entry point.
      * 
      * <p>
-     * Loads inventory from file, initializes with default products if empty,
-     * and runs an interactive loop for inventory operations. Saves inventory
-     * to file on exit.
+     * Initializes the service (which loads inventory from file or creates default),
+     * then runs an interactive loop until the user chooses Exit.
+     * Tracks transaction counts and displays a summary on exit.
      *
      * <p>
-     * Counters array structure:
+     * Counters array:
      * <ul>
-     * <li>index 0: sell operation count</li>
-     * <li>index 1: total units sold</li>
-     * <li>index 2: restock operation count</li>
-     * <li>index 3: total units restocked</li>
+     * <li>index 0 – sell operation count</li>
+     * <li>index 1 – total units sold</li>
+     * <li>index 2 – restock operation count</li>
+     * <li>index 3 – total units restocked</li>
      * </ul>
      *
-     * @param args command-line arguments (not used in this application)
+     * @param args command line arguments (not used)
      */
     public static void main(String[] args) {
         Scanner keyboard = new Scanner(System.in);
         boolean processRunning = true;
         InventoryService invServiceObj = new InventoryService(new InventoryFileRepository());
 
-        // Consolidated transaction counters array [sellCount, unitsSold, restockCount,
-        // unitsRestocked]
+        // [sellCount, unitsSold, restockCount, unitsRestocked]
         int[] counters = new int[4];
 
-        // Main application loop - continues until user chooses "Exit"
         while (processRunning) {
             System.out.println("Welcome, would you like to process an order? Please choose: Sell, Restock, or Exit");
             String choice = normalizeCommand(keyboard.nextLine());
 
-            // First-level validation: check if choice is valid
             if (!isValidChoice(choice)) {
                 System.out.println("Error: Invalid selection. Please choose: Sell, Restock, or Exit");
-                continue; // Return to start of loop for new input
+                continue;
             }
 
-            // Exit branch: terminates the application loop
             if (choice.equals("exit")) {
                 invServiceObj.saveInventory();
                 processRunning = false;
-            }
-            // Sell branch: process product sale
-            else if (choice.equals("sell")) {
+            } else if (choice.equals("sell")) {
                 processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
-            }
-            // Restock branch: process inventory restocking
-            else if (choice.equals("restock")) {
+            } else if (choice.equals("restock")) {
                 processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
             }
         }
         keyboard.close();
         System.out.printf(
-                "Thank you for using Apex service: Here is a summary of your usage today%nNumber of sell operations: %d"
-                        + "%nTotal number of units sold: %d%nNumber of restock operations: %d%nTotal number of units restocked: %d%nHave a nice day! :)",
+                "Thank you for using Apex service: Here is a summary of your usage today%n" +
+                        "Number of sell operations: %d%nTotal number of units sold: %d%n" +
+                        "Number of restock operations: %d%nTotal number of units restocked: %d%n" +
+                        "Have a nice day! :)%n",
                 counters[0], counters[1], counters[2], counters[3]);
-
     }
 
     /**
-     * Processes an inventory transaction (sell or restock) based on user input.
+     * Processes a single inventory transaction (sell or restock).
      * 
      * <p>
-     * This method consolidates the common workflow for both sell and restock
-     * operations, including product selection, quantity validation, service
-     * layer delegation, and transaction tracking.
+     * Handles product selection, quantity input, validation, and delegates
+     * to the appropriate service method. Updates the counters array accordingly.
      *
-     * <p>
-     * The counters array is updated as follows:
-     * <ul>
-     * <li>For "sell": counters[0] (sell count) and counters[1] (units sold)</li>
-     * <li>For "restock": counters[2] (restock count) and counters[3] (units
-     * restocked)</li>
-     * </ul>
-     *
-     * @param keyboard  Scanner for reading user input
-     * @param inventory List of available products
-     * @param service   InventoryService for business logic operations
-     * @param action    The transaction type ("sell" or "restock")
-     * @param counters  Array containing transaction counters [sellCount, unitsSold,
-     *                  restockCount, unitsRestocked]
+     * @param keyboard  scanner for user input
+     * @param inventory read‑only snapshot of current inventory (for display)
+     * @param service   service that performs the actual operation
+     * @param action    "sell" or "restock"
+     * @param counters  transaction counters array
      */
     private static void processInventoryAction(Scanner keyboard, List<Product> inventory, InventoryService service,
             String action, int[] counters) {
@@ -136,20 +113,18 @@ public class InventoryBatchManager {
         System.out.printf("%s %d of %s.%n%d remaining in stock.%n",
                 action.substring(0, 1).toUpperCase() + action.substring(1),
                 quantity, validProduct.getName(), validProduct.getQuantityInStock());
-
     }
 
     /**
-     * Reads and validates a product selection from the user.
+     * Reads a product selection from the user.
      * 
      * <p>
-     * Displays the current inventory list, reads the user's selection,
-     * validates that it corresponds to a valid product index, and returns
-     * the selected Product object.
+     * Displays the inventory list, reads a 1‑based index, validates it,
+     * and returns the corresponding Product. Returns null if input is invalid.
      *
-     * @param scanner   Scanner object for reading user input
-     * @param inventory List of available products
-     * @return Selected Product object, or null if selection is invalid
+     * @param scanner   scanner for user input
+     * @param inventory list of products to choose from
+     * @return selected Product or null
      */
     private static Product readProductSelection(Scanner scanner, List<Product> inventory) {
         displayInventory(inventory);
@@ -161,15 +136,14 @@ public class InventoryBatchManager {
     }
 
     /**
-     * Reads and validates a positive integer from user input.
+     * Reads and validates a positive integer.
      * 
      * <p>
-     * Reads a line of input and validates that it contains only digits
-     * and represents a positive integer value. Returns null if the input
-     * is blank, contains non-digit characters, or is not a positive integer.
+     * Ensures input contains only digits and is > 0. Returns null for invalid
+     * input.
      *
-     * @param scanner Scanner object for reading user input
-     * @return Validated positive integer, or null if input is invalid
+     * @param scanner scanner for user input
+     * @return positive integer or null
      */
     private static Integer readPositiveInt(Scanner scanner) {
         String trimmedRawInput = scanner.nextLine().trim();
@@ -177,39 +151,33 @@ public class InventoryBatchManager {
             return null;
         }
         for (int i = 0; i < trimmedRawInput.length(); i++) {
-            char nextChar = trimmedRawInput.charAt(i);
-            if (!(Character.isDigit(nextChar))) {
+            if (!Character.isDigit(trimmedRawInput.charAt(i))) {
                 return null;
             }
         }
         Integer posInt = Integer.parseInt(trimmedRawInput);
-        if (posInt <= 0) {
-            return null;
-        }
-        return posInt;
+        return posInt > 0 ? posInt : null;
     }
 
     /**
-     * Displays the current inventory in a formatted list.
+     * Displays inventory with 1‑based numbering.
      * 
-     * @param currentInventory List of products to display
+     * @param currentInventory list of products to display
      */
     private static void displayInventory(List<Product> currentInventory) {
         for (int i = 0; i < currentInventory.size(); i++) {
-            System.out.printf("No: %d\tProduct: %s\tStock: %d%n", i + UI_OFFSET, currentInventory.get(i).getName(),
+            System.out.printf("No: %d\tProduct: %s\tStock: %d%n",
+                    i + UI_OFFSET,
+                    currentInventory.get(i).getName(),
                     currentInventory.get(i).getQuantityInStock());
         }
     }
 
     /**
-     * Normalizes user input for consistent processing.
+     * Normalizes command input: trims and converts to lowercase.
      * 
-     * <p>
-     * Trims whitespace and converts input to lowercase for case-insensitive
-     * command matching.
-     *
-     * @param input Raw user input string
-     * @return Normalized command string
+     * @param input raw input string
+     * @return normalized command, or empty string if null/blank
      */
     private static String normalizeCommand(String input) {
         if (input == null || input.isBlank()) {
@@ -219,14 +187,12 @@ public class InventoryBatchManager {
     }
 
     /**
-     * Validates that the user's input matches one of the allowed commands.
+     * Checks if the choice is one of the valid commands.
      * 
-     * @param choice user input string to validate
-     * @return true if the input matches a valid command, false otherwise
+     * @param choice normalized command string
+     * @return true if valid (sell, restock, exit)
      */
     private static boolean isValidChoice(String choice) {
-        return choice.equals("sell") ||
-                choice.equals("restock") ||
-                choice.equals("exit");
+        return choice.equals("sell") || choice.equals("restock") || choice.equals("exit");
     }
 }
