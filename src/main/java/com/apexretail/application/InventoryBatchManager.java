@@ -19,7 +19,6 @@ import com.apexretail.service.InventoryService;
  * @version 1.0.0
  */
 public class InventoryBatchManager {
-    private final static int UI_OFFSET = 1;
 
     /**
      * Main entry point.
@@ -61,9 +60,9 @@ public class InventoryBatchManager {
                 invServiceObj.saveInventory();
                 processRunning = false;
             } else if (choice.equals("sell")) {
-                processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
+                processInventoryAction(keyboard, invServiceObj, choice, counters);
             } else if (choice.equals("restock")) {
-                processInventoryAction(keyboard, invServiceObj.getReadOnlyInventory(), invServiceObj, choice, counters);
+                processInventoryAction(keyboard, invServiceObj, choice, counters);
             }
         }
         keyboard.close();
@@ -88,19 +87,15 @@ public class InventoryBatchManager {
      * @param action    "sell" or "restock"
      * @param counters  transaction counters array
      */
-    private static void processInventoryAction(Scanner keyboard, List<Product> inventory, InventoryService service,
+    private static void processInventoryAction(Scanner keyboard, InventoryService service,
             String action, int[] counters) {
-        Product validProduct = readProductSelection(keyboard, inventory);
+        Product validProduct = readProductSelection(keyboard, service);
         if (validProduct == null) {
             System.out.println("Invalid product selection.");
             return;
         }
         System.out.printf("How many would you like to %s?%n", action);
-        Integer quantity = readPositiveInt(keyboard);
-        if (quantity == null) {
-            System.out.println("Please enter a valid quantity.");
-            return;
-        }
+        int quantity = readPositiveInt(keyboard);
         if ("sell".equals(action)) {
             service.sellProductByID(validProduct.getId(), quantity);
             counters[0]++;
@@ -126,13 +121,15 @@ public class InventoryBatchManager {
      * @param inventory list of products to choose from
      * @return selected Product or null
      */
-    private static Product readProductSelection(Scanner scanner, List<Product> inventory) {
-        displayInventory(inventory);
-        Integer productChoice = readPositiveInt(scanner);
-        if (productChoice == null || productChoice < UI_OFFSET || productChoice > inventory.size()) {
+    private static Product readProductSelection(Scanner scanner, InventoryService service) {
+        displayInventory(service);
+        int productChoice = readPositiveInt(scanner);
+        try {
+            return service.getProductByID(productChoice);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Product not found.");
             return null;
         }
-        return inventory.get(productChoice - UI_OFFSET);
     }
 
     /**
@@ -145,18 +142,34 @@ public class InventoryBatchManager {
      * @param scanner scanner for user input
      * @return positive integer or null
      */
-    private static Integer readPositiveInt(Scanner scanner) {
-        String trimmedRawInput = scanner.nextLine().trim();
-        if (trimmedRawInput.isBlank()) {
-            return null;
-        }
-        for (int i = 0; i < trimmedRawInput.length(); i++) {
-            if (!Character.isDigit(trimmedRawInput.charAt(i))) {
-                return null;
+    private static int readPositiveInt(Scanner scanner) {
+        while (true) {
+            String trimmedRawInput = scanner.nextLine().trim();
+            if (trimmedRawInput.isBlank()) {
+                System.out.println("Input cannot be blank. Try again:");
+                continue;
             }
+
+            boolean isNumeric = true;
+            for (int i = 0; i < trimmedRawInput.length(); i++) {
+                if (!Character.isDigit(trimmedRawInput.charAt(i))) {
+                    isNumeric = false;
+                    break;
+                }
+            }
+            if (!isNumeric) {
+                System.out.println("Invalid number. Try again:");
+                continue;
+            }
+
+            int posInt = Integer.parseInt(trimmedRawInput);
+            if (posInt <= 0) {
+                System.out.println("Number must be greater than 0. Try again:");
+                continue;
+            }
+
+            return posInt;
         }
-        Integer posInt = Integer.parseInt(trimmedRawInput);
-        return posInt > 0 ? posInt : null;
     }
 
     /**
@@ -164,10 +177,11 @@ public class InventoryBatchManager {
      * 
      * @param currentInventory list of products to display
      */
-    private static void displayInventory(List<Product> currentInventory) {
+    private static void displayInventory(InventoryService service) {
+        List<Product> currentInventory = service.getReadOnlyInventory();
         for (int i = 0; i < currentInventory.size(); i++) {
             System.out.printf("No: %d\tProduct: %s\tStock: %d%n",
-                    i + UI_OFFSET,
+                    currentInventory.get(i).getId(),
                     currentInventory.get(i).getName(),
                     currentInventory.get(i).getQuantityInStock());
         }

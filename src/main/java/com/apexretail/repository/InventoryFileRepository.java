@@ -76,7 +76,7 @@ public class InventoryFileRepository {
                 continue;
             }
             try {
-                Long id = Long.parseLong(prod[0]);
+                long id = Long.parseLong(prod[0]);
                 String name = prod[1];
                 BigDecimal price = new BigDecimal(prod[2]);
                 int quantity = Integer.parseInt(prod[3]);

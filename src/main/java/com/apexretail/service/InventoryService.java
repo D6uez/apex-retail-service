@@ -80,8 +80,7 @@ public class InventoryService {
      * @throws IllegalArgumentException if insufficient stock is available
      * @see Product#decreaseStock(int)
      */
-    public void sellProductByID(Long id, int amount) {
-        validateID(id);
+    public void sellProductByID(long id, int amount) {
         validateStockAdjustment(amount);
 
         Product product = findProductByID(id);
@@ -102,24 +101,11 @@ public class InventoryService {
      *                                  invalid
      * @see Product#increaseStock(int)
      */
-    public void restockProductByID(Long id, int amount) {
-        validateID(id);
+    public void restockProductByID(long id, int amount) {
         validateStockAdjustment(amount);
 
         Product product = findProductByID(id);
         product.increaseStock(amount);
-    }
-
-    /**
-     * Validates that a product ID is not null.
-     * 
-     * @param id product ID to validate
-     * @throws IllegalArgumentException if id is null
-     */
-    private void validateID(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Invalid product.");
-        }
     }
 
     /**
@@ -141,9 +127,9 @@ public class InventoryService {
      * @return the Product with matching ID
      * @throws IllegalArgumentException if no product with given ID exists
      */
-    private Product findProductByID(Long id) {
+    private Product findProductByID(long id) {
         for (int i = 0; i < inventory.size(); i++) {
-            if (inventory.get(i).getId().equals(id)) {
+            if (inventory.get(i).getId() == id) {
                 return inventory.get(i);
             }
         }
@@ -170,5 +156,9 @@ public class InventoryService {
         inventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, "Produce"));
         inventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, "Dairy"));
         inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
+    }
+
+    public Product getProductByID(long productChoice) {
+        return findProductByID(productChoice);
     }
 }
