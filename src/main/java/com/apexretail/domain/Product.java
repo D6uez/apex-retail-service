@@ -33,10 +33,13 @@ public class Product {
     /** Current quantity available in inventory. */
     private int quantityInStock;
 
-    /** Product classification category stored as a String. */
-    // NOTE: Category is currently persisted as String.
-    // Will be replaced with Category rehydration when domain model is finalized.
-
+    /**
+     * Product classification category stored as a String.
+     * 
+     * <p>
+     * NOTE: Category is currently persisted as String.
+     * Will be replaced with Category rehydration when domain model is finalized.
+     */
     private String category;
 
     /**

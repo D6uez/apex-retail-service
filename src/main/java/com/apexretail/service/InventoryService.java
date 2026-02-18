@@ -68,16 +68,14 @@ public class InventoryService {
      * stock.
      * 
      * <p>
-     * Validates the ID and amount, finds the product, and calls its decreaseStock
-     * method.
-     * This operation is atomic and will only complete if sufficient stock is
-     * available.
+     * Validates the amount, finds the product by ID, and calls its decreaseStock
+     * method. This operation is atomic and will only complete if sufficient stock
+     * is available.
      *
-     * @param id     product identifier (must not be null and must exist)
+     * @param id     product identifier (must exist)
      * @param amount quantity to sell (must be > 0)
-     * @throws IllegalArgumentException if id is null or not found, or amount is
-     *                                  invalid
-     * @throws IllegalArgumentException if insufficient stock is available
+     * @throws IllegalArgumentException if amount is invalid, product not found,
+     *                                  or insufficient stock available
      * @see Product#decreaseStock(int)
      */
     public void sellProductByID(long id, int amount) {
@@ -92,13 +90,12 @@ public class InventoryService {
      * inventory.
      * 
      * <p>
-     * Validates the ID and amount, finds the product, and calls its increaseStock
+     * Validates the amount, finds the product by ID, and calls its increaseStock
      * method.
      *
-     * @param id     product identifier (must not be null and must exist)
+     * @param id     product identifier (must exist)
      * @param amount quantity to add (must be > 0)
-     * @throws IllegalArgumentException if id is null or not found, or amount is
-     *                                  invalid
+     * @throws IllegalArgumentException if amount is invalid or product not found
      * @see Product#increaseStock(int)
      */
     public void restockProductByID(long id, int amount) {
@@ -158,6 +155,13 @@ public class InventoryService {
         inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
     }
 
+    /**
+     * Retrieves a product by its ID.
+     * 
+     * @param productChoice the product ID to look up
+     * @return the Product with the given ID
+     * @throws IllegalArgumentException if no product with that ID exists
+     */
     public Product getProductByID(long productChoice) {
         return findProductByID(productChoice);
     }

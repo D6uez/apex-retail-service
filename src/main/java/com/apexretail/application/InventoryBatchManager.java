@@ -81,11 +81,11 @@ public class InventoryBatchManager {
      * Handles product selection, quantity input, validation, and delegates
      * to the appropriate service method. Updates the counters array accordingly.
      *
-     * @param keyboard  scanner for user input
-     * @param inventory read‑only snapshot of current inventory (for display)
-     * @param service   service that performs the actual operation
-     * @param action    "sell" or "restock"
-     * @param counters  transaction counters array
+     * @param keyboard scanner for user input
+     * @param service  service that performs the actual operation and provides
+     *                 inventory data
+     * @param action   "sell" or "restock"
+     * @param counters transaction counters array
      */
     private static void processInventoryAction(Scanner keyboard, InventoryService service,
             String action, int[] counters) {
@@ -114,11 +114,12 @@ public class InventoryBatchManager {
      * Reads a product selection from the user.
      * 
      * <p>
-     * Displays the inventory list, reads a 1‑based index, validates it,
+     * Displays the inventory list, reads a numeric ID, validates it via the
+     * service,
      * and returns the corresponding Product. Returns null if input is invalid.
      *
-     * @param scanner   scanner for user input
-     * @param inventory list of products to choose from
+     * @param scanner scanner for user input
+     * @param service service used to fetch product by ID
      * @return selected Product or null
      */
     private static Product readProductSelection(Scanner scanner, InventoryService service) {
@@ -136,11 +137,10 @@ public class InventoryBatchManager {
      * Reads and validates a positive integer.
      * 
      * <p>
-     * Ensures input contains only digits and is > 0. Returns null for invalid
-     * input.
+     * Loops until the user enters a valid positive integer.
      *
      * @param scanner scanner for user input
-     * @return positive integer or null
+     * @return validated positive integer
      */
     private static int readPositiveInt(Scanner scanner) {
         while (true) {
@@ -175,7 +175,7 @@ public class InventoryBatchManager {
     /**
      * Displays inventory with 1‑based numbering.
      * 
-     * @param currentInventory list of products to display
+     * @param service service providing read‑only inventory list
      */
     private static void displayInventory(InventoryService service) {
         List<Product> currentInventory = service.getReadOnlyInventory();
