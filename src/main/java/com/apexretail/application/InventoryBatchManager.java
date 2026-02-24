@@ -173,7 +173,7 @@ public class InventoryBatchManager {
     }
 
     /**
-     * Displays inventory with 1‑based numbering.
+     * Displays the current inventory with product ID, name, and stock quantity.
      * 
      * @param service service providing read‑only inventory list
      */

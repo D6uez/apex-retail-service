@@ -4,5 +4,6 @@ com\apexretail\domain\Category.class
 com\apexretail\diagnostics\SystemInfo.class
 com\apexretail\utilities\TemperatureConverter.class
 com\apexretail\application\InventoryBatchManager.class
+com\apexretail\application\JavaFXEntry.class
 com\apexretail\repository\InventoryFileRepository.class
 com\apexretail\domain\Product.class
