@@ -15,7 +15,8 @@ import com.apexretail.repository.InventoryFileRepository;
  * This service provides business operations for inventory management,
  * including selling products and restocking inventory. All operations
  * validate their inputs before execution. Inventory data is loaded from
- * and saved to persistent storage via a repository.
+ * and saved to persistent storage via a repository. Each operation returns
+ * a descriptive success message that can be displayed to the user.
  *
  * <p>
  * Example:
@@ -23,8 +24,10 @@ import com.apexretail.repository.InventoryFileRepository;
  * <pre>{@code
  * InventoryFileRepository repo = new InventoryFileRepository();
  * InventoryService inventory = new InventoryService(repo);
- * inventory.restockProductByID(101L, 5); // Add 5 units to product with ID 101
- * inventory.sellProductByID(101L, 2); // Sell 2 units
+ * String message = inventory.restockProductByID(101L, 5); // Add 5 units to product with ID 101
+ * System.out.println(message);
+ * message = inventory.sellProductByID(101L, 2); // Sell 2 units
+ * System.out.println(message);
  * inventory.saveInventory(); // Persist changes
  * }</pre>
  *
@@ -74,15 +77,21 @@ public class InventoryService {
      *
      * @param id     product identifier (must exist)
      * @param amount quantity to sell (must be > 0)
+     * @return a success message describing the completed transaction
      * @throws IllegalArgumentException if amount is invalid, product not found,
      *                                  or insufficient stock available
      * @see Product#decreaseStock(int)
      */
-    public void sellProductByID(long id, int amount) {
+    public String sellProductByID(long id, int amount) {
         validateStockAdjustment(amount);
 
         Product product = findProductByID(id);
         product.decreaseStock(amount);
+
+        return String.format(
+                "Successfully sold %d units of %s.",
+                amount,
+                product.getName());
     }
 
     /**
@@ -95,14 +104,20 @@ public class InventoryService {
      *
      * @param id     product identifier (must exist)
      * @param amount quantity to add (must be > 0)
+     * @return a success message describing the completed transaction
      * @throws IllegalArgumentException if amount is invalid or product not found
      * @see Product#increaseStock(int)
      */
-    public void restockProductByID(long id, int amount) {
+    public String restockProductByID(long id, int amount) {
         validateStockAdjustment(amount);
 
         Product product = findProductByID(id);
         product.increaseStock(amount);
+
+        return String.format(
+                "Successfully restocked %d units of %s.",
+                amount,
+                product.getName());
     }
 
     /**
@@ -135,14 +150,16 @@ public class InventoryService {
 
     /**
      * Saves the current inventory to persistent storage using the repository.
+     * 
+     * <p>
+     * Writes the in‑memory inventory list to the configured CSV file.
+     * A confirmation message is printed to the console upon success.
+     *
+     * @throws IOException if the file cannot be created or written
      */
-    public void saveInventory() {
-        try {
-            repository.writeFile(FILE_NAME, inventory);
-            System.out.println("Inventory saved successfully.");
-        } catch (Exception e) {
-            System.out.println("Saving inventory failed: " + e.getMessage());
-        }
+    public void saveInventory() throws IOException {
+        repository.writeFile(FILE_NAME, inventory);
+        System.out.println("Inventory saved successfully.");
     }
 
     /**

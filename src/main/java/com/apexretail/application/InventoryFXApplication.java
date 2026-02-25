@@ -1,5 +1,7 @@
 package com.apexretail.application;
 
+import java.io.IOException;
+
 import com.apexretail.repository.InventoryFileRepository;
 import com.apexretail.service.InventoryService;
 
@@ -29,12 +31,13 @@ import javafx.stage.Stage;
  * <li>Separation of UI component creation and layout building</li>
  * <li>Integration with the service and repository layers for inventory
  * operations</li>
- * <li>Input validation with user‑friendly error alerts</li>
- * <li>Use of constants for layout spacing</li>
+ * <li>Input validation with user‑friendly error and success alerts</li>
+ * <li>Automatic inventory saving on application close (with error alert on
+ * failure)</li>
+ * <li>Use of constants for layout spacing and an enum for action types</li>
  * </ul>
  * Future phases will expand the UI with inventory display, transaction
- * summaries,
- * and more advanced features.
+ * summaries, and more advanced features.
  *
  * @author David
  * @version 1.0.0
@@ -44,6 +47,11 @@ public class InventoryFXApplication extends Application {
     // -------------------------------------------------------------------------
     // Constants
     // -------------------------------------------------------------------------
+
+    private enum ActionType {
+        SELL,
+        RESTOCK
+    }
 
     /** Spacing (in pixels) between controls inside an HBox or VBox. */
     private final int PIXELS_BETWEEN_CONTROLS = 10;
@@ -128,17 +136,17 @@ public class InventoryFXApplication extends Application {
         // ---------------------------------------------------------------------
         sellBtn.setOnAction(e -> {
             try {
-                uiSell(productIDTextField.getText(), quantityTextField.getText());
+                processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.SELL);
             } catch (IllegalArgumentException exc) {
-                createErrorAlert(exc);
+                showErrorAlert(exc);
             }
         });
 
         restockBtn.setOnAction(e -> {
             try {
-                uiRestock(productIDTextField.getText(), quantityTextField.getText());
+                processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.RESTOCK);
             } catch (IllegalArgumentException exc) {
-                createErrorAlert(exc);
+                showErrorAlert(exc);
             }
         });
 
@@ -173,14 +181,50 @@ public class InventoryFXApplication extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Apex Point of Sale");
         primaryStage.show();
+
+        // Auto‑save inventory when the window is closed; show error alert on failure.
+        primaryStage.setOnCloseRequest(event -> {
+            try {
+                service.saveInventory();
+            } catch (IOException e) {
+                showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Processes a sell or restock action based on the provided {@link ActionType}.
+     * Validates inputs, delegates to the service, and shows a success alert with
+     * the message returned from the service.
+     *
+     * @param productID the product ID entered by the user
+     * @param quantity  the quantity entered by the user
+     * @param at        the type of action to perform (SELL or RESTOCK)
+     * @throws IllegalArgumentException if input validation fails or product is not
+     *                                  found
+     */
+    private void processAction(String productID, String quantity, ActionType at) {
+        int id = readPositiveInt(productID);
+        int qty = readPositiveInt(quantity);
+
+        switch (at) {
+            case SELL -> {
+                String message = service.sellProductByID(id, qty);
+                showSuccessAlert(message);
+            }
+            case RESTOCK -> {
+                String message = service.restockProductByID(id, qty);
+                showSuccessAlert(message);
+            }
+        }
     }
 
     /**
      * Displays an error alert dialog with the message from the given exception.
      *
-     * @param exc the IllegalArgumentException containing the error details
+     * @param exc the exception containing the error details
      */
-    private void createErrorAlert(IllegalArgumentException exc) {
+    private void showErrorAlert(Exception exc) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Error Dialog");
         alert.setHeaderText("An exception occurred!");
@@ -189,29 +233,17 @@ public class InventoryFXApplication extends Application {
     }
 
     /**
-     * Handles a restock operation: validates input and delegates to the service.
+     * Displays a success alert dialog after a completed transaction.
      *
-     * @param productID the product ID entered by the user
-     * @param quantity  the quantity entered by the user
-     * @throws IllegalArgumentException if either input is invalid
+     * @param message the success message to display (e.g., "Successfully sold 5
+     *                units of Tomato.")
      */
-    private void uiRestock(String productID, String quantity) {
-        int id = readPositiveInt(productID);
-        int qty = readPositiveInt(quantity);
-        service.restockProductByID(id, qty);
-    }
-
-    /**
-     * Handles a sell operation: validates input and delegates to the service.
-     *
-     * @param productID the product ID entered by the user
-     * @param quantity  the quantity entered by the user
-     * @throws IllegalArgumentException if either input is invalid
-     */
-    private void uiSell(String productID, String quantity) {
-        int id = readPositiveInt(productID);
-        int qty = readPositiveInt(quantity);
-        service.sellProductByID(id, qty);
+    private void showSuccessAlert(String message) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText("Transaction Completed");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     /**

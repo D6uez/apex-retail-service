@@ -57,8 +57,13 @@ public class InventoryBatchManager {
             }
 
             if (choice.equals("exit")) {
-                invServiceObj.saveInventory();
-                processRunning = false;
+                try {
+                    invServiceObj.saveInventory();
+                    processRunning = false;
+                } catch (Exception e) {
+                    e.getMessage();
+                }
+
             } else if (choice.equals("sell")) {
                 processInventoryAction(keyboard, invServiceObj, choice, counters);
             } else if (choice.equals("restock")) {

@@ -2,6 +2,7 @@ com\apexretail\application\InventoryFXApplication.class
 com\apexretail\service\InventoryService.class
 com\apexretail\domain\Category.class
 com\apexretail\diagnostics\SystemInfo.class
+com\apexretail\application\InventoryFXApplication$ActionType.class
 com\apexretail\utilities\TemperatureConverter.class
 com\apexretail\application\InventoryBatchManager.class
 com\apexretail\application\JavaFXEntry.class
