@@ -239,14 +239,28 @@ Implements persistent data storage by creating a repository layer, introducing r
 
 ---
 
-## Chapter 11: JavaFX: GUI Programming and Basic Controls
+## Chapter 11: JavaFX — GUI Programming and Basic Controls
+### Overview
+Introduces a graphical user interface layer using JavaFX, transitioning from command-line interaction to a structured desktop UI while preserving separation of concerns.
 
-### Planned Features
-- Desktop application with graphical interface
-- Basic form controls for inventory management
-- Real-time inventory display
-- Tabbed interface for different workflows
-- Responsive layout design
+### Concepts Applied
+- JavaFX Application lifecycle
+- Scene graph construction with basic layout panes
+- Event-driven programming with lambda expressions
+- Service delegation for business logic
+- Input validation and exception propagation
+- User feedback via Alert dialogs
+- Automatic persistence on application close
+
+### Implementation Notes
+- Created `InventoryFXApplication` extending `Application`
+- Built UI using pure Java (no FXML)
+- Replaced CLI prompts with text fields and buttons
+- Used internal enum (`ActionType`) for safe operation handling
+- Centralized validation in `readPositiveInt()` method
+- Displayed success/error messages via centralized alert methods
+- Delegated all business logic to `InventoryService`
+- Configured window close event to auto-save inventory
 
 ---
 
