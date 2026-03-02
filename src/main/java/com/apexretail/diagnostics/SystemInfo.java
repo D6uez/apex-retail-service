@@ -18,11 +18,17 @@ public class SystemInfo {
      * @param args command-line arguments (not used)
      */
     public static void main(String[] args) {
-        System.out.println("Developer: David");
-        System.out.println("Team: Apex Retail Solutions");
-        System.out.println("Project: Inventory & Sales Management System");
-        System.out.println("Java Version: " + System.getProperty("java.version"));
-        System.out.println("Timestamp: " + Instant.now());
-        System.out.println("Application Version: 0.0.1");
+        System.out.println(getSystemInfo());
+    }
+
+    public static String getSystemInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Developer: David\n");
+        sb.append("Team: Apex Retail Solutions\n");
+        sb.append("Project: Inventory & Sales Management System\n");
+        sb.append("Java Version: ").append(System.getProperty("java.version")).append("\n");
+        sb.append("Timestamp: ").append(Instant.now()).append("\n");
+        sb.append("Application Version: 0.0.1");
+        return sb.toString();
     }
 }

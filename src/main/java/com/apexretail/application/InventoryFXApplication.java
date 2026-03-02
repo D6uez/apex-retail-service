@@ -2,10 +2,12 @@ package com.apexretail.application;
 
 import java.io.IOException;
 
+import com.apexretail.diagnostics.SystemInfo;
 import com.apexretail.repository.InventoryFileRepository;
 import com.apexretail.service.InventoryService;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -13,7 +15,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -35,6 +41,11 @@ import javafx.stage.Stage;
  * <li>Input validation with user‑friendly error and success alerts</li>
  * <li>Automatic inventory saving on application close (with error alert on
  * failure)</li>
+ * <li>Menu bar with File (Save, Exit) and Help (System Information) menus</li>
+ * <li>Conditional exit behavior – application exits only if save succeeds,
+ * preventing data loss</li>
+ * <li>Display of system diagnostic information via menu, using
+ * {@link SystemInfo}</li>
  * <li>Use of constants for layout spacing and an enum for action types</li>
  * </ul>
  * Future phases will expand the UI with inventory display, transaction
@@ -91,8 +102,7 @@ public class InventoryFXApplication extends Application {
      */
     @Override
     public void start(Stage primaryStage) {
-        VBox root = buildRoot();
-        root.setAlignment(Pos.CENTER);
+        BorderPane root = buildRoot();
 
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
@@ -100,24 +110,99 @@ public class InventoryFXApplication extends Application {
         primaryStage.show();
 
         primaryStage.setOnCloseRequest(event -> {
-            try {
-                service.saveInventory();
-            } catch (IOException e) {
-                showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
-            }
+            attemptSaveInventory();
         });
     }
 
     /**
-     * Builds the root VBox containing the title and the input form.
+     * Attempts to save the current inventory to persistent storage.
      *
-     * @return a VBox with the title and form arranged vertically
+     * @return {@code true} if the save operation succeeded, {@code false} otherwise
+     * @see #showErrorAlert(Exception)
      */
-    private VBox buildRoot() {
+    private boolean attemptSaveInventory() {
+        boolean isSaveSuccess = false;
+        try {
+            service.saveInventory();
+            isSaveSuccess = true;
+        } catch (IOException e) {
+            showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
+        }
+        return isSaveSuccess;
+    }
+
+    /**
+     * Builds and returns the menu bar for the application.
+     * Contains File menu (Save, Exit) and Help menu (System Information).
+     * <p>
+     * The Save menu item shows a success alert only if the save operation
+     * completes successfully. The Exit menu item attempts to save and then
+     * exits the application only if the save succeeded, preventing data loss.
+     *
+     * @return the configured MenuBar
+     */
+    private MenuBar buildMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        Menu fileMenu = new Menu("File");
+        MenuItem saveItem = new MenuItem("Save");
+        MenuItem exitItem = new MenuItem("Exit");
+        fileMenu.getItems().add(saveItem);
+        fileMenu.getItems().add(exitItem);
+
+        Menu helpMenu = new Menu("Help");
+        MenuItem systemInfoItem = new MenuItem("System Information");
+        helpMenu.getItems().add(systemInfoItem);
+
+        saveItem.setOnAction(event -> {
+            if (attemptSaveInventory()) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Information");
+                alert.setHeaderText("Notice");
+                alert.setContentText("Inventory saved successfully.");
+                alert.showAndWait();
+            }
+        });
+
+        exitItem.setOnAction(event -> {
+            if (attemptSaveInventory()) {
+                Platform.exit();
+            }
+        });
+
+        systemInfoItem.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information");
+            alert.setHeaderText("Notice");
+            alert.setContentText(SystemInfo.getSystemInfo());
+            alert.showAndWait();
+        });
+
+        menuBar.getMenus().add(fileMenu);
+        menuBar.getMenus().add(helpMenu);
+
+        return menuBar;
+    }
+
+    /**
+     * Builds the root layout using a BorderPane.
+     * The menu bar is placed at the top, and a VBox containing the title
+     * and input form is placed in the center.
+     *
+     * @return the configured BorderPane
+     */
+    private BorderPane buildRoot() {
+        BorderPane borderPane = new BorderPane();
         HBox titleHBox = new HBox(buildTitle());
         titleHBox.setAlignment(Pos.CENTER);
+
         GridPane form = buildForm();
-        return new VBox(titleHBox, form);
+        VBox vBox = new VBox(SPACING, titleHBox, form);
+        vBox.setAlignment(Pos.CENTER);
+
+        borderPane.setTop(buildMenuBar());
+        borderPane.setCenter(vBox);
+
+        return borderPane;
     }
 
     /**
