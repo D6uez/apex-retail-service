@@ -28,7 +28,8 @@ import javafx.stage.Stage;
  * This class illustrates:
  * <ul>
  * <li>Pure Java UI construction (no FXML)</li>
- * <li>Separation of UI component creation and layout building</li>
+ * <li>Separation of UI component creation and layout building via helper
+ * methods</li>
  * <li>Integration with the service and repository layers for inventory
  * operations</li>
  * <li>Input validation with user‑friendly error and success alerts</li>
@@ -48,44 +49,21 @@ public class InventoryFXApplication extends Application {
     // Constants
     // -------------------------------------------------------------------------
 
+    /** Enum representing the type of inventory action. */
     private enum ActionType {
         SELL,
         RESTOCK
     }
 
     /** Spacing (in pixels) between controls inside an HBox or VBox. */
-    private final int PIXELS_BETWEEN_CONTROLS = 10;
+    private static final int SPACING = 10;
 
     // -------------------------------------------------------------------------
     // Instance Fields (UI Controls)
     // -------------------------------------------------------------------------
 
-    /** Label displaying the application title. */
-    private Label titleLabel;
-
-    /** Label for the product ID field. */
-    private Label productIDLabel;
-
-    /** Label for the quantity field. */
-    private Label quantityLabel;
-
-    /** Text field where the user enters the product ID. */
-    private TextField productIDTextField;
-
-    /** Text field where the user enters the quantity. */
-    private TextField quantityTextField;
-
-    /** Button to trigger a sell operation. */
-    private Button sellBtn;
-
-    /** Button to trigger a restock operation. */
-    private Button restockBtn;
-
-    /** Repository for file‑based inventory persistence. */
-    private final InventoryFileRepository repo = new InventoryFileRepository();
-
     /** Service layer that handles inventory business logic. */
-    private final InventoryService service = new InventoryService(repo);
+    private final InventoryService service = new InventoryService(new InventoryFileRepository());
 
     // -------------------------------------------------------------------------
     // Entry Point
@@ -106,34 +84,56 @@ public class InventoryFXApplication extends Application {
 
     /**
      * Initializes and configures the primary stage with the application's UI.
-     * Creates all controls, sets up event handlers, builds the layout,
-     * and displays the window.
+     * Delegates UI construction to helper methods, attaches the close‑request
+     * handler for auto‑saving, and displays the window.
      *
      * @param primaryStage the primary stage for this application
      */
     @Override
     public void start(Stage primaryStage) {
-        // ---------------------------------------------------------------------
-        // 1. Create and configure controls
-        // ---------------------------------------------------------------------
-        titleLabel = new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
-        productIDLabel = new Label("Product ID:");
-        quantityLabel = new Label("Quantity:");
+        VBox root = buildRoot();
+        root.setAlignment(Pos.CENTER);
 
-        productIDTextField = new TextField();
-        productIDTextField.setPromptText("Enter Product ID");
-        productIDTextField.setPrefColumnCount(15);
+        Scene scene = new Scene(root, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Apex Point of Sale");
+        primaryStage.show();
 
-        quantityTextField = new TextField();
-        quantityTextField.setPromptText("Enter Quantity");
-        quantityTextField.setPrefColumnCount(15);
+        primaryStage.setOnCloseRequest(event -> {
+            try {
+                service.saveInventory();
+            } catch (IOException e) {
+                showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
+            }
+        });
+    }
 
-        sellBtn = new Button("Sell");
-        restockBtn = new Button("Restock");
+    /**
+     * Builds the root VBox containing the title and the input form.
+     *
+     * @return a VBox with the title and form arranged vertically
+     */
+    private VBox buildRoot() {
+        HBox titleHBox = new HBox(buildTitle());
+        titleHBox.setAlignment(Pos.CENTER);
+        GridPane form = buildForm();
+        return new VBox(titleHBox, form);
+    }
 
-        // ---------------------------------------------------------------------
-        // 2. Attach event handlers – validate input and call service methods
-        // ---------------------------------------------------------------------
+    /**
+     * Builds the grid form containing labels, text fields, and action buttons.
+     * This method creates all input controls and buttons, configures them,
+     * and attaches the event handlers for sell and restock actions.
+     *
+     * @return a configured GridPane with all input controls
+     */
+    private GridPane buildForm() {
+        Button sellBtn = new Button("Sell");
+        Button restockBtn = new Button("Restock");
+
+        TextField productIDTextField = new TextField();
+        TextField quantityTextField = new TextField();
+
         sellBtn.setOnAction(e -> {
             try {
                 processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.SELL);
@@ -150,9 +150,15 @@ public class InventoryFXApplication extends Application {
             }
         });
 
-        // ---------------------------------------------------------------------
-        // 3. Build layout using a GridPane for the input fields and buttons
-        // ---------------------------------------------------------------------
+        Label productIDLabel = new Label("Product ID:");
+        Label quantityLabel = new Label("Quantity:");
+
+        productIDTextField.setPromptText("Enter Product ID");
+        productIDTextField.setPrefColumnCount(15);
+
+        quantityTextField.setPromptText("Enter Quantity");
+        quantityTextField.setPrefColumnCount(15);
+
         GridPane gridPane = new GridPane();
         gridPane.setMinSize(400, 200);
 
@@ -164,32 +170,20 @@ public class InventoryFXApplication extends Application {
         gridPane.add(restockBtn, 1, 3);
 
         gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(PIXELS_BETWEEN_CONTROLS);
-        gridPane.setVgap(PIXELS_BETWEEN_CONTROLS);
-        gridPane.setPadding(new Insets(PIXELS_BETWEEN_CONTROLS));
+        gridPane.setHgap(SPACING);
+        gridPane.setVgap(SPACING);
+        gridPane.setPadding(new Insets(SPACING));
 
-        HBox titleHBox = new HBox(titleLabel);
-        titleHBox.setAlignment(Pos.CENTER);
+        return gridPane;
+    }
 
-        VBox root = new VBox(titleHBox, gridPane);
-        root.setAlignment(Pos.CENTER);
-
-        // ---------------------------------------------------------------------
-        // 4. Create scene and configure stage
-        // ---------------------------------------------------------------------
-        Scene scene = new Scene(root, 800, 600);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Apex Point of Sale");
-        primaryStage.show();
-
-        // Auto‑save inventory when the window is closed; show error alert on failure.
-        primaryStage.setOnCloseRequest(event -> {
-            try {
-                service.saveInventory();
-            } catch (IOException e) {
-                showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
-            }
-        });
+    /**
+     * Creates the title label for the application window.
+     *
+     * @return a Label with the application title
+     */
+    private Label buildTitle() {
+        return new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
     }
 
     /**
