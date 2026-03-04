@@ -107,6 +107,7 @@ public class InventoryFXApplication extends Application {
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Apex Point of Sale");
+        scene.getStylesheets().add(getClass().getResource("/inventory.css").toExternalForm());
         primaryStage.show();
 
         primaryStage.setOnCloseRequest(event -> {
@@ -171,7 +172,7 @@ public class InventoryFXApplication extends Application {
 
         systemInfoItem.setOnAction(event -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Information");
+            alert.setTitle("System Information");
             alert.setHeaderText("Notice");
             alert.setContentText(SystemInfo.getSystemInfo());
             alert.showAndWait();
@@ -244,6 +245,8 @@ public class InventoryFXApplication extends Application {
         quantityTextField.setPromptText("Enter Quantity");
         quantityTextField.setPrefColumnCount(15);
 
+        HBox btnHBox = new HBox(SPACING, sellBtn, restockBtn);
+
         GridPane gridPane = new GridPane();
         gridPane.setMinSize(400, 200);
 
@@ -251,13 +254,12 @@ public class InventoryFXApplication extends Application {
         gridPane.add(productIDTextField, 1, 1);
         gridPane.add(quantityLabel, 0, 2);
         gridPane.add(quantityTextField, 1, 2);
-        gridPane.add(sellBtn, 0, 3);
-        gridPane.add(restockBtn, 1, 3);
+        gridPane.add(btnHBox, 1, 3);
 
         gridPane.setAlignment(Pos.CENTER);
         gridPane.setHgap(SPACING);
         gridPane.setVgap(SPACING);
-        gridPane.setPadding(new Insets(SPACING));
+        gridPane.setPadding(new Insets(SPACING * 2));
 
         return gridPane;
     }
@@ -268,7 +270,9 @@ public class InventoryFXApplication extends Application {
      * @return a Label with the application title
      */
     private Label buildTitle() {
-        return new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
+        Label titleLabel = new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
+        titleLabel.getStyleClass().add("title-label");
+        return titleLabel;
     }
 
     /**

@@ -1,0 +1,16 @@
+.root {
+    -fx-background-color: #f4f4f4;
+    background-color: #f4f4f4;
+}
+
+.title-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.button {
+    -fx-min-width: 60px;
+    min-width: 60px;
+}
