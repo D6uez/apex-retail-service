@@ -18,7 +18,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -28,8 +31,9 @@ import javafx.stage.Stage;
 /**
  * InventoryFXApplication is the first-phase JavaFX graphical interface for the
  * Apex Retail inventory system. It replaces the command‑line interaction with a
- * simple window containing input fields for product ID and quantity, and two
- * action buttons (Sell and Restock).
+ * simple window containing input fields for product ID and quantity, radio
+ * buttons to select Sell or Restock, and a Process button. A transaction
+ * history area displays the outcome of each operation.
  * <p>
  * This class illustrates:
  * <ul>
@@ -39,6 +43,7 @@ import javafx.stage.Stage;
  * <li>Integration with the service and repository layers for inventory
  * operations</li>
  * <li>Input validation with user‑friendly error and success alerts</li>
+ * <li>Transaction history displayed in a read‑only text area</li>
  * <li>Automatic inventory saving on application close (with error alert on
  * failure)</li>
  * <li>Menu bar with File (Save, Exit) and Help (System Information) menus</li>
@@ -48,8 +53,8 @@ import javafx.stage.Stage;
  * {@link SystemInfo}</li>
  * <li>Use of constants for layout spacing and an enum for action types</li>
  * </ul>
- * Future phases will expand the UI with inventory display, transaction
- * summaries, and more advanced features.
+ * Future phases will expand the UI with inventory display, more detailed
+ * summaries, and additional features.
  *
  * @author David
  * @version 1.0.0
@@ -75,6 +80,9 @@ public class InventoryFXApplication extends Application {
 
     /** Service layer that handles inventory business logic. */
     private final InventoryService service = new InventoryService(new InventoryFileRepository());
+
+    /** Read‑only text area to display a history of completed transactions. */
+    private TextArea transactionHistory;
 
     // -------------------------------------------------------------------------
     // Entry Point
@@ -186,12 +194,14 @@ public class InventoryFXApplication extends Application {
 
     /**
      * Builds the root layout using a BorderPane.
-     * The menu bar is placed at the top, and a VBox containing the title
-     * and input form is placed in the center.
+     * The menu bar is placed at the top, and a VBox containing the title,
+     * input form, and transaction history area is placed in the center.
+     * The transaction history is displayed below the form.
      *
      * @return the configured BorderPane
      */
     private BorderPane buildRoot() {
+        buildTransactionHistory();
         BorderPane borderPane = new BorderPane();
         HBox titleHBox = new HBox(buildTitle());
         titleHBox.setAlignment(Pos.CENTER);
@@ -199,40 +209,67 @@ public class InventoryFXApplication extends Application {
         GridPane form = buildForm();
         VBox vBox = new VBox(SPACING, titleHBox, form);
         vBox.setAlignment(Pos.CENTER);
+        VBox transactionVBox = new VBox(transactionHistory);
+        transactionVBox.setAlignment(Pos.CENTER);
 
         borderPane.setTop(buildMenuBar());
         borderPane.setCenter(vBox);
+        borderPane.setBottom(transactionVBox);
 
         return borderPane;
     }
 
     /**
-     * Builds the grid form containing labels, text fields, and action buttons.
-     * This method creates all input controls and buttons, configures them,
-     * and attaches the event handlers for sell and restock actions.
+     * Initializes the transaction history text area with default properties.
+     * The area is read‑only and has a preferred column count for width.
+     */
+    private void buildTransactionHistory() {
+        transactionHistory = new TextArea();
+        transactionHistory.setPrefColumnCount(50);
+        transactionHistory.setEditable(false);
+    }
+
+    /**
+     * Appends a message to the transaction history, followed by a newline.
+     *
+     * @param message the message to append (e.g., a transaction result)
+     */
+    private void appendTransaction(String message) {
+        transactionHistory.appendText(message + "\n");
+    }
+
+    /**
+     * Builds the grid form containing labels, text fields, radio buttons,
+     * and the process button.
      *
      * @return a configured GridPane with all input controls
      */
     private GridPane buildForm() {
-        Button sellBtn = new Button("Sell");
-        Button restockBtn = new Button("Restock");
+        RadioButton sellBtn = new RadioButton("Sell");
+        sellBtn.setSelected(true);
+        RadioButton restockBtn = new RadioButton("Restock");
+        Button processActionBtn = new Button("Process");
+
+        ToggleGroup actionToggleGroup = new ToggleGroup();
+        sellBtn.setToggleGroup(actionToggleGroup);
+        restockBtn.setToggleGroup(actionToggleGroup);
 
         TextField productIDTextField = new TextField();
         TextField quantityTextField = new TextField();
 
-        sellBtn.setOnAction(e -> {
-            try {
-                processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.SELL);
-            } catch (IllegalArgumentException exc) {
-                showErrorAlert(exc);
-            }
-        });
-
-        restockBtn.setOnAction(e -> {
-            try {
-                processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.RESTOCK);
-            } catch (IllegalArgumentException exc) {
-                showErrorAlert(exc);
+        processActionBtn.setOnAction(e -> {
+            if (sellBtn.isSelected()) {
+                try {
+                    processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.SELL);
+                } catch (IllegalArgumentException exc) {
+                    showErrorAlert(exc);
+                }
+            } else if (restockBtn.isSelected()) {
+                try {
+                    processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.RESTOCK);
+                } catch (IllegalArgumentException exc) {
+                    showErrorAlert(exc);
+                }
             }
         });
 
@@ -255,6 +292,7 @@ public class InventoryFXApplication extends Application {
         gridPane.add(quantityLabel, 0, 2);
         gridPane.add(quantityTextField, 1, 2);
         gridPane.add(btnHBox, 1, 3);
+        gridPane.add(processActionBtn, 1, 4);
 
         gridPane.setAlignment(Pos.CENTER);
         gridPane.setHgap(SPACING);
@@ -277,8 +315,9 @@ public class InventoryFXApplication extends Application {
 
     /**
      * Processes a sell or restock action based on the provided {@link ActionType}.
-     * Validates inputs, delegates to the service, and shows a success alert with
-     * the message returned from the service.
+     * Validates inputs, delegates to the service, shows a success alert with
+     * the message returned from the service, and appends the message to the
+     * transaction history.
      *
      * @param productID the product ID entered by the user
      * @param quantity  the quantity entered by the user
@@ -294,10 +333,12 @@ public class InventoryFXApplication extends Application {
             case SELL -> {
                 String message = service.sellProductByID(id, qty);
                 showSuccessAlert(message);
+                appendTransaction(message);
             }
             case RESTOCK -> {
                 String message = service.restockProductByID(id, qty);
                 showSuccessAlert(message);
+                appendTransaction(message);
             }
         }
     }
