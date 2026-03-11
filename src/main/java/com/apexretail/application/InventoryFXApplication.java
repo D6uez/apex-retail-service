@@ -3,11 +3,14 @@ package com.apexretail.application;
 import java.io.IOException;
 
 import com.apexretail.diagnostics.SystemInfo;
+import com.apexretail.domain.Product;
 import com.apexretail.repository.InventoryFileRepository;
 import com.apexretail.service.InventoryService;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -19,6 +22,8 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -31,9 +36,10 @@ import javafx.stage.Stage;
 /**
  * InventoryFXApplication is the first-phase JavaFX graphical interface for the
  * Apex Retail inventory system. It replaces the command‑line interaction with a
- * simple window containing input fields for product ID and quantity, radio
- * buttons to select Sell or Restock, and a Process button. A transaction
- * history area displays the outcome of each operation.
+ * window containing a TableView to select a product, a quantity input field,
+ * radio buttons to choose Sell or Restock, and a Process button. A transaction
+ * history area displays the outcome of each operation, and the product list
+ * automatically refreshes after each transaction.
  * <p>
  * This class illustrates:
  * <ul>
@@ -43,7 +49,9 @@ import javafx.stage.Stage;
  * <li>Integration with the service and repository layers for inventory
  * operations</li>
  * <li>Input validation with user‑friendly error and success alerts</li>
- * <li>Transaction history displayed in a read‑only text area</li>
+ * <li>Transaction history displayed in a read‑only text area (with an initial
+ * header)</li>
+ * <li>Live inventory display using a TableView</li>
  * <li>Automatic inventory saving on application close (with error alert on
  * failure)</li>
  * <li>Menu bar with File (Save, Exit) and Help (System Information) menus</li>
@@ -51,10 +59,11 @@ import javafx.stage.Stage;
  * preventing data loss</li>
  * <li>Display of system diagnostic information via menu, using
  * {@link SystemInfo}</li>
- * <li>Use of constants for layout spacing and an enum for action types</li>
+ * <li>Use of constants for layout spacing, maximum width, and an enum for
+ * action types</li>
  * </ul>
- * Future phases will expand the UI with inventory display, more detailed
- * summaries, and additional features.
+ * Future phases will expand the UI with more detailed summaries and additional
+ * features.
  *
  * @author David
  * @version 1.0.0
@@ -74,6 +83,9 @@ public class InventoryFXApplication extends Application {
     /** Spacing (in pixels) between controls inside an HBox or VBox. */
     private static final int SPACING = 10;
 
+    /** Maximum width (in pixels) for the transaction history text area. */
+    private static final int MAX_WIDTH = 500;
+
     // -------------------------------------------------------------------------
     // Instance Fields (UI Controls)
     // -------------------------------------------------------------------------
@@ -83,6 +95,11 @@ public class InventoryFXApplication extends Application {
 
     /** Read‑only text area to display a history of completed transactions. */
     private TextArea transactionHistory;
+
+    /**
+     * Table view showing current inventory with product name, quantity, and price.
+     */
+    private TableView<Product> currentInventoryTableView;
 
     // -------------------------------------------------------------------------
     // Entry Point
@@ -123,21 +140,32 @@ public class InventoryFXApplication extends Application {
         });
     }
 
+    // -------------------------------------------------------------------------
+    // UI Building Helpers
+    // -------------------------------------------------------------------------
+
     /**
-     * Attempts to save the current inventory to persistent storage.
+     * Builds the root layout using a BorderPane.
+     * The menu bar is placed at the top, and a VBox containing the title,
+     * input form, and transaction history area is placed in the center.
+     * The transaction history is displayed below the form.
      *
-     * @return {@code true} if the save operation succeeded, {@code false} otherwise
-     * @see #showErrorAlert(Exception)
+     * @return the configured BorderPane
      */
-    private boolean attemptSaveInventory() {
-        boolean isSaveSuccess = false;
-        try {
-            service.saveInventory();
-            isSaveSuccess = true;
-        } catch (IOException e) {
-            showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
-        }
-        return isSaveSuccess;
+    private BorderPane buildRoot() {
+        buildTransactionHistory();
+        BorderPane borderPane = new BorderPane();
+        HBox titleHBox = new HBox(buildTitle());
+        titleHBox.setAlignment(Pos.CENTER);
+
+        GridPane form = buildForm();
+        VBox vBox = new VBox(SPACING, titleHBox, form, transactionHistory);
+        vBox.setAlignment(Pos.CENTER);
+
+        borderPane.setTop(buildMenuBar());
+        borderPane.setCenter(vBox);
+
+        return borderPane;
     }
 
     /**
@@ -193,54 +221,20 @@ public class InventoryFXApplication extends Application {
     }
 
     /**
-     * Builds the root layout using a BorderPane.
-     * The menu bar is placed at the top, and a VBox containing the title,
-     * input form, and transaction history area is placed in the center.
-     * The transaction history is displayed below the form.
+     * Creates the title label for the application window.
      *
-     * @return the configured BorderPane
+     * @return a Label with the application title
      */
-    private BorderPane buildRoot() {
-        buildTransactionHistory();
-        BorderPane borderPane = new BorderPane();
-        HBox titleHBox = new HBox(buildTitle());
-        titleHBox.setAlignment(Pos.CENTER);
-
-        GridPane form = buildForm();
-        VBox vBox = new VBox(SPACING, titleHBox, form);
-        vBox.setAlignment(Pos.CENTER);
-        VBox transactionVBox = new VBox(transactionHistory);
-        transactionVBox.setAlignment(Pos.CENTER);
-
-        borderPane.setTop(buildMenuBar());
-        borderPane.setCenter(vBox);
-        borderPane.setBottom(transactionVBox);
-
-        return borderPane;
+    private Label buildTitle() {
+        Label titleLabel = new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
+        titleLabel.getStyleClass().add("title-label");
+        return titleLabel;
     }
 
     /**
-     * Initializes the transaction history text area with default properties.
-     * The area is read‑only and has a preferred column count for width.
-     */
-    private void buildTransactionHistory() {
-        transactionHistory = new TextArea();
-        transactionHistory.setPrefColumnCount(50);
-        transactionHistory.setEditable(false);
-    }
-
-    /**
-     * Appends a message to the transaction history, followed by a newline.
-     *
-     * @param message the message to append (e.g., a transaction result)
-     */
-    private void appendTransaction(String message) {
-        transactionHistory.appendText(message + "\n");
-    }
-
-    /**
-     * Builds the grid form containing labels, text fields, radio buttons,
-     * and the process button.
+     * Builds the grid form containing the product selection table, quantity
+     * field, action radio buttons, and the process button.
+     * The product selection is required; an error is shown if none is selected.
      *
      * @return a configured GridPane with all input controls
      */
@@ -254,41 +248,41 @@ public class InventoryFXApplication extends Application {
         sellBtn.setToggleGroup(actionToggleGroup);
         restockBtn.setToggleGroup(actionToggleGroup);
 
-        TextField productIDTextField = new TextField();
+        buildInventoryTableview(); // initializes the table
+
         TextField quantityTextField = new TextField();
+        quantityTextField.setPromptText("Enter Quantity");
+        quantityTextField.setPrefColumnCount(15);
 
         processActionBtn.setOnAction(e -> {
-            if (sellBtn.isSelected()) {
-                try {
-                    processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.SELL);
-                } catch (IllegalArgumentException exc) {
-                    showErrorAlert(exc);
-                }
-            } else if (restockBtn.isSelected()) {
-                try {
-                    processAction(productIDTextField.getText(), quantityTextField.getText(), ActionType.RESTOCK);
-                } catch (IllegalArgumentException exc) {
-                    showErrorAlert(exc);
-                }
+            Product selected = currentInventoryTableView.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showErrorAlert(new IllegalArgumentException("Please select a product."));
+                return;
+            }
+            long productId = selected.getId();
+            String quantity = quantityTextField.getText();
+
+            ActionType action = sellBtn.isSelected() ? ActionType.SELL : ActionType.RESTOCK;
+
+            try {
+                processAction(productId, quantity, action);
+                currentInventoryTableView.refresh();
+            } catch (IllegalArgumentException exc) {
+                showErrorAlert(exc);
             }
         });
 
-        Label productIDLabel = new Label("Product ID:");
+        Label productLabel = new Label("Product:");
         Label quantityLabel = new Label("Quantity:");
-
-        productIDTextField.setPromptText("Enter Product ID");
-        productIDTextField.setPrefColumnCount(15);
-
-        quantityTextField.setPromptText("Enter Quantity");
-        quantityTextField.setPrefColumnCount(15);
 
         HBox btnHBox = new HBox(SPACING, sellBtn, restockBtn);
 
         GridPane gridPane = new GridPane();
         gridPane.setMinSize(400, 200);
 
-        gridPane.add(productIDLabel, 0, 1);
-        gridPane.add(productIDTextField, 1, 1);
+        gridPane.add(productLabel, 0, 1);
+        gridPane.add(currentInventoryTableView, 1, 1);
         gridPane.add(quantityLabel, 0, 2);
         gridPane.add(quantityTextField, 1, 2);
         gridPane.add(btnHBox, 1, 3);
@@ -303,43 +297,109 @@ public class InventoryFXApplication extends Application {
     }
 
     /**
-     * Creates the title label for the application window.
-     *
-     * @return a Label with the application title
+     * Initializes the inventory table view with columns for product name,
+     * quantity in stock, and price. Populates the table with data from the
+     * service.
      */
-    private Label buildTitle() {
-        Label titleLabel = new Label("Apex Retail - Inventory CLI Replacement (Phase 1)");
-        titleLabel.getStyleClass().add("title-label");
-        return titleLabel;
+    private void buildInventoryTableview() {
+        currentInventoryTableView = new TableView<>();
+
+        TableColumn<Product, String> nameCol = new TableColumn<>("Product");
+        nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
+
+        TableColumn<Product, String> qtyCol = new TableColumn<>("In Stock");
+        qtyCol.setCellValueFactory(
+                cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getQuantityInStock())));
+
+        TableColumn<Product, String> priceCol = new TableColumn<>("Price Each");
+        priceCol.setCellValueFactory(
+                cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getPrice())));
+
+        currentInventoryTableView.getColumns().add(nameCol);
+        currentInventoryTableView.getColumns().add(qtyCol);
+        currentInventoryTableView.getColumns().add(priceCol);
+        currentInventoryTableView.setItems(FXCollections.observableArrayList(service.getReadOnlyInventory()));
     }
 
     /**
+     * Initializes the transaction history text area with default properties.
+     * The area is read‑only, has a maximum width set by {@link #MAX_WIDTH},
+     * and starts with a header "Transaction History:\n".
+     */
+    private void buildTransactionHistory() {
+        transactionHistory = new TextArea("Transaction History:\n");
+        transactionHistory.setMaxWidth(MAX_WIDTH);
+        transactionHistory.setEditable(false);
+    }
+
+    // -------------------------------------------------------------------------
+    // Transaction Processing
+    // -------------------------------------------------------------------------
+
+    /**
      * Processes a sell or restock action based on the provided {@link ActionType}.
-     * Validates inputs, delegates to the service, shows a success alert with
+     * Validates the quantity, delegates to the service, shows a success alert with
      * the message returned from the service, and appends the message to the
      * transaction history.
      *
-     * @param productID the product ID entered by the user
-     * @param quantity  the quantity entered by the user
+     * @param productID the ID of the product to act on (already obtained from
+     *                  table)
+     * @param quantity  the quantity entered by the user (as a string, will be
+     *                  parsed)
      * @param at        the type of action to perform (SELL or RESTOCK)
-     * @throws IllegalArgumentException if input validation fails or product is not
-     *                                  found
+     * @throws IllegalArgumentException if quantity validation fails or product is
+     *                                  not found
      */
-    private void processAction(String productID, String quantity, ActionType at) {
-        int id = readPositiveInt(productID);
+    private void processAction(long productID, String quantity, ActionType at) {
         int qty = readPositiveInt(quantity);
 
         switch (at) {
             case SELL -> {
-                String message = service.sellProductByID(id, qty);
+                String message = service.sellProductByID(productID, qty);
                 showSuccessAlert(message);
                 appendTransaction(message);
             }
             case RESTOCK -> {
-                String message = service.restockProductByID(id, qty);
+                String message = service.restockProductByID(productID, qty);
                 showSuccessAlert(message);
                 appendTransaction(message);
             }
+        }
+    }
+
+    /**
+     * Appends a message to the transaction history, followed by a newline.
+     *
+     * @param message the message to append (e.g., a transaction result)
+     */
+    private void appendTransaction(String message) {
+        transactionHistory.appendText(message + "\n");
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation and Error Handling
+    // -------------------------------------------------------------------------
+
+    /**
+     * Parses and validates a string as a positive integer.
+     *
+     * @param userInput the raw input string
+     * @return the parsed positive integer
+     * @throws IllegalArgumentException if input is blank, non‑numeric, or ≤ 0
+     */
+    private int readPositiveInt(String userInput) {
+        String trimmed = userInput.trim();
+        if (trimmed.isBlank()) {
+            throw new IllegalArgumentException("Value cannot be blank.");
+        }
+        try {
+            int value = Integer.parseInt(trimmed);
+            if (value <= 0) {
+                throw new IllegalArgumentException("Value must be positive.");
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Value entered is not a valid number.");
         }
     }
 
@@ -370,26 +430,24 @@ public class InventoryFXApplication extends Application {
         alert.showAndWait();
     }
 
+    // -------------------------------------------------------------------------
+    // Persistence
+    // -------------------------------------------------------------------------
+
     /**
-     * Parses and validates a string as a positive integer.
+     * Attempts to save the current inventory to persistent storage.
      *
-     * @param userInput the raw input string
-     * @return the parsed positive integer
-     * @throws IllegalArgumentException if input is blank, non‑numeric, or ≤ 0
+     * @return {@code true} if the save operation succeeded, {@code false} otherwise
+     * @see #showErrorAlert(Exception)
      */
-    private int readPositiveInt(String userInput) {
-        String trimmed = userInput.trim();
-        if (trimmed.isBlank()) {
-            throw new IllegalArgumentException("Value cannot be blank.");
-        }
+    private boolean attemptSaveInventory() {
+        boolean isSaveSuccess = false;
         try {
-            int value = Integer.parseInt(trimmed);
-            if (value <= 0) {
-                throw new IllegalArgumentException("Value must be positive.");
-            }
-            return value;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Value entered is not a valid number.");
+            service.saveInventory();
+            isSaveSuccess = true;
+        } catch (IOException e) {
+            showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
         }
+        return isSaveSuccess;
     }
 }

@@ -14,3 +14,10 @@
     -fx-min-width: 60px;
     min-width: 60px;
 }
+
+.text-area {
+    -fx-font-family: monospace;
+    -fx-background-color: #fff;
+    font-family: monospace;
+    background-color: #fff;
+}
