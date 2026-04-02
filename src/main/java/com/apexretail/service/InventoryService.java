@@ -1,12 +1,10 @@
 package com.apexretail.service;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.apexretail.domain.Product;
-import com.apexretail.repository.InventoryFileRepository;
+import com.apexretail.repository.InventoryRepository;
 
 /**
  * Service for managing product inventory operations.
@@ -14,56 +12,46 @@ import com.apexretail.repository.InventoryFileRepository;
  * <p>
  * This service provides business operations for inventory management,
  * including selling products and restocking inventory. All operations
- * validate their inputs before execution. Inventory data is loaded from
- * and saved to persistent storage via a repository. Each operation returns
- * a descriptive success message that can be displayed to the user.
+ * validate their inputs before execution. After each successful operation,
+ * the modified product is automatically persisted via the repository.
  *
  * <p>
  * Example:
  * 
  * <pre>{@code
- * InventoryFileRepository repo = new InventoryFileRepository();
- * InventoryService inventory = new InventoryService(repo);
- * String message = inventory.restockProductByID(101L, 5); // Add 5 units to product with ID 101
+ * InventoryRepository repo = new InventoryFileRepository();
+ * InventoryService service = new InventoryService(repo);
+ * String message = service.restockProductByID(101L, 5);
  * System.out.println(message);
- * message = inventory.sellProductByID(101L, 2); // Sell 2 units
+ * message = service.sellProductByID(101L, 2);
  * System.out.println(message);
- * inventory.saveInventory(); // Persist changes
  * }</pre>
  *
  * @author David
  * @version 1.0.0
  */
 public class InventoryService {
-    private InventoryFileRepository repository;
-    private final String FILE_NAME = "inventoryFile.csv";
-    private List<Product> inventory = new ArrayList<Product>();
+    private InventoryRepository repository;
 
     /**
      * Constructs an InventoryService with the given repository.
-     * Loads inventory from file; creates default inventory if file is empty.
+     * The repository is expected to handle its own initialization
+     * (loading or creating default inventory).
      * 
-     * @param repo the repository for file operations
+     * @param repo the repository for data access
      */
-    public InventoryService(InventoryFileRepository repo) {
+    public InventoryService(InventoryRepository repo) {
         this.repository = repo;
-        try {
-            inventory = repository.loadInventory(FILE_NAME);
-            if (inventory.isEmpty()) {
-                createDefaultInventory();
-            }
-        } catch (IOException e) {
-            System.out.println("Critical error loading inventory. Starting with empty inventory.");
-        }
     }
 
     /**
      * Returns an unmodifiable view of the current inventory.
      * 
      * @return immutable copy of the inventory list
+     * @throws IOException if an error occurs while reading from the repository
      */
-    public List<Product> getReadOnlyInventory() {
-        return List.copyOf(inventory);
+    public List<Product> getReadOnlyInventory() throws IOException {
+        return repository.findAll();
     }
 
     /**
@@ -71,9 +59,9 @@ public class InventoryService {
      * stock.
      * 
      * <p>
-     * Validates the amount, finds the product by ID, and calls its decreaseStock
-     * method. This operation is atomic and will only complete if sufficient stock
-     * is available.
+     * Validates the amount, finds the product by ID, calls its decreaseStock
+     * method, and persists the updated product. This operation is atomic and
+     * will only complete if sufficient stock is available.
      *
      * @param id     product identifier (must exist)
      * @param amount quantity to sell (must be > 0)
@@ -87,6 +75,7 @@ public class InventoryService {
 
         Product product = findProductByID(id);
         product.decreaseStock(amount);
+        repository.save(product);
 
         return String.format(
                 "Successfully sold %d units of %s.",
@@ -99,8 +88,8 @@ public class InventoryService {
      * inventory.
      * 
      * <p>
-     * Validates the amount, finds the product by ID, and calls its increaseStock
-     * method.
+     * Validates the amount, finds the product by ID, calls its increaseStock
+     * method, and persists the updated product.
      *
      * @param id     product identifier (must exist)
      * @param amount quantity to add (must be > 0)
@@ -113,6 +102,7 @@ public class InventoryService {
 
         Product product = findProductByID(id);
         product.increaseStock(amount);
+        repository.save(product);
 
         return String.format(
                 "Successfully restocked %d units of %s.",
@@ -133,53 +123,25 @@ public class InventoryService {
     }
 
     /**
-     * Finds a product by its ID.
+     * Finds a product by its ID using the repository.
      * 
      * @param id product ID to search for
      * @return the Product with matching ID
      * @throws IllegalArgumentException if no product with given ID exists
      */
     private Product findProductByID(long id) {
-        for (int i = 0; i < inventory.size(); i++) {
-            if (inventory.get(i).getId() == id) {
-                return inventory.get(i);
-            }
-        }
-        throw new IllegalArgumentException("Product not found");
-    }
-
-    /**
-     * Saves the current inventory to persistent storage using the repository.
-     * 
-     * <p>
-     * Writes the in‑memory inventory list to the configured CSV file.
-     * A confirmation message is printed to the console upon success.
-     *
-     * @throws IOException if the file cannot be created or written
-     */
-    public void saveInventory() throws IOException {
-        repository.writeFile(FILE_NAME, inventory);
-        System.out.println("Inventory saved successfully.");
-    }
-
-    /**
-     * Creates a default inventory with sample products.
-     */
-    private void createDefaultInventory() {
-        inventory.add(new Product(1, "Tomato", BigDecimal.valueOf(0.25), 30, "Produce"));
-        inventory.add(new Product(2, "Onion", BigDecimal.valueOf(0.90), 20, "Produce"));
-        inventory.add(new Product(3, "Milk", BigDecimal.valueOf(2.46), 15, "Dairy"));
-        inventory.add(new Product(4, "Cheese", BigDecimal.valueOf(3.15), 10, "Dairy"));
+        return repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
     }
 
     /**
      * Retrieves a product by its ID.
      * 
-     * @param productChoice the product ID to look up
+     * @param productId the product ID to look up
      * @return the Product with the given ID
      * @throws IllegalArgumentException if no product with that ID exists
      */
-    public Product getProductByID(long productChoice) {
-        return findProductByID(productChoice);
+    public Product getProductByID(long productId) {
+        return findProductByID(productId);
     }
 }

@@ -35,11 +35,10 @@ import javafx.stage.Stage;
 
 /**
  * InventoryFXApplication is the first-phase JavaFX graphical interface for the
- * Apex Retail inventory system. It replaces the command‑line interaction with a
- * window containing a TableView to select a product, a quantity input field,
- * radio buttons to choose Sell or Restock, and a Process button. A transaction
- * history area displays the outcome of each operation, and the product list
- * automatically refreshes after each transaction.
+ * Apex Retail inventory system. It provides a window with a TableView to select
+ * a product, a quantity input field, radio buttons to choose Sell or Restock,
+ * and a Process button. A transaction history area displays the outcome of each
+ * operation, and the product list refreshes after each transaction.
  * <p>
  * This class illustrates:
  * <ul>
@@ -52,11 +51,7 @@ import javafx.stage.Stage;
  * <li>Transaction history displayed in a read‑only text area (with an initial
  * header)</li>
  * <li>Live inventory display using a TableView</li>
- * <li>Automatic inventory saving on application close (with error alert on
- * failure)</li>
- * <li>Menu bar with File (Save, Exit) and Help (System Information) menus</li>
- * <li>Conditional exit behavior – application exits only if save succeeds,
- * preventing data loss</li>
+ * <li>Menu bar with Exit (File) and System Information (Help) menus</li>
  * <li>Display of system diagnostic information via menu, using
  * {@link SystemInfo}</li>
  * <li>Use of constants for layout spacing, maximum width, and an enum for
@@ -120,8 +115,7 @@ public class InventoryFXApplication extends Application {
 
     /**
      * Initializes and configures the primary stage with the application's UI.
-     * Delegates UI construction to helper methods, attaches the close‑request
-     * handler for auto‑saving, and displays the window.
+     * Delegates UI construction to helper methods and displays the window.
      *
      * @param primaryStage the primary stage for this application
      */
@@ -134,10 +128,6 @@ public class InventoryFXApplication extends Application {
         primaryStage.setTitle("Apex Point of Sale");
         scene.getStylesheets().add(getClass().getResource("/inventory.css").toExternalForm());
         primaryStage.show();
-
-        primaryStage.setOnCloseRequest(event -> {
-            attemptSaveInventory();
-        });
     }
 
     // -------------------------------------------------------------------------
@@ -148,7 +138,6 @@ public class InventoryFXApplication extends Application {
      * Builds the root layout using a BorderPane.
      * The menu bar is placed at the top, and a VBox containing the title,
      * input form, and transaction history area is placed in the center.
-     * The transaction history is displayed below the form.
      *
      * @return the configured BorderPane
      */
@@ -170,40 +159,22 @@ public class InventoryFXApplication extends Application {
 
     /**
      * Builds and returns the menu bar for the application.
-     * Contains File menu (Save, Exit) and Help menu (System Information).
-     * <p>
-     * The Save menu item shows a success alert only if the save operation
-     * completes successfully. The Exit menu item attempts to save and then
-     * exits the application only if the save succeeded, preventing data loss.
+     * Contains File menu (Exit) and Help menu (System Information).
      *
      * @return the configured MenuBar
      */
     private MenuBar buildMenuBar() {
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("File");
-        MenuItem saveItem = new MenuItem("Save");
         MenuItem exitItem = new MenuItem("Exit");
-        fileMenu.getItems().add(saveItem);
         fileMenu.getItems().add(exitItem);
 
         Menu helpMenu = new Menu("Help");
         MenuItem systemInfoItem = new MenuItem("System Information");
         helpMenu.getItems().add(systemInfoItem);
 
-        saveItem.setOnAction(event -> {
-            if (attemptSaveInventory()) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Information");
-                alert.setHeaderText("Notice");
-                alert.setContentText("Inventory saved successfully.");
-                alert.showAndWait();
-            }
-        });
-
         exitItem.setOnAction(event -> {
-            if (attemptSaveInventory()) {
-                Platform.exit();
-            }
+            Platform.exit();
         });
 
         systemInfoItem.setOnAction(event -> {
@@ -318,7 +289,11 @@ public class InventoryFXApplication extends Application {
         currentInventoryTableView.getColumns().add(nameCol);
         currentInventoryTableView.getColumns().add(qtyCol);
         currentInventoryTableView.getColumns().add(priceCol);
-        currentInventoryTableView.setItems(FXCollections.observableArrayList(service.getReadOnlyInventory()));
+        try {
+            currentInventoryTableView.setItems(FXCollections.observableArrayList(service.getReadOnlyInventory()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -428,26 +403,5 @@ public class InventoryFXApplication extends Application {
         alert.setHeaderText("Transaction Completed");
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    // -------------------------------------------------------------------------
-    // Persistence
-    // -------------------------------------------------------------------------
-
-    /**
-     * Attempts to save the current inventory to persistent storage.
-     *
-     * @return {@code true} if the save operation succeeded, {@code false} otherwise
-     * @see #showErrorAlert(Exception)
-     */
-    private boolean attemptSaveInventory() {
-        boolean isSaveSuccess = false;
-        try {
-            service.saveInventory();
-            isSaveSuccess = true;
-        } catch (IOException e) {
-            showErrorAlert(new RuntimeException("Failed to save inventory: " + e.getMessage()));
-        }
-        return isSaveSuccess;
     }
 }

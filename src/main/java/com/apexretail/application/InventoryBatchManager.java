@@ -1,5 +1,6 @@
 package com.apexretail.application;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -12,8 +13,9 @@ import com.apexretail.service.InventoryService;
  * 
  * <p>
  * Provides a menu-driven interface for sell and restock operations.
- * Inventory is loaded from persistent storage at startup and saved on exit,
- * with business logic delegated to the service layer.
+ * Inventory is loaded from persistent storage at startup but is NOT
+ * automatically saved on exit. Business logic is delegated to the service
+ * layer.
  *
  * @author David
  * @version 1.0.0
@@ -57,13 +59,7 @@ public class InventoryBatchManager {
             }
 
             if (choice.equals("exit")) {
-                try {
-                    invServiceObj.saveInventory();
-                    processRunning = false;
-                } catch (Exception e) {
-                    e.getMessage();
-                }
-
+                processRunning = false;
             } else if (choice.equals("sell")) {
                 processInventoryAction(keyboard, invServiceObj, choice, counters);
             } else if (choice.equals("restock")) {
@@ -120,8 +116,8 @@ public class InventoryBatchManager {
      * 
      * <p>
      * Displays the inventory list, reads a numeric ID, validates it via the
-     * service,
-     * and returns the corresponding Product. Returns null if input is invalid.
+     * service, and returns the corresponding Product. Returns null if input is
+     * invalid.
      *
      * @param scanner scanner for user input
      * @param service service used to fetch product by ID
@@ -183,12 +179,17 @@ public class InventoryBatchManager {
      * @param service service providing read‑only inventory list
      */
     private static void displayInventory(InventoryService service) {
-        List<Product> currentInventory = service.getReadOnlyInventory();
-        for (int i = 0; i < currentInventory.size(); i++) {
-            System.out.printf("No: %d\tProduct: %s\tStock: %d%n",
-                    currentInventory.get(i).getId(),
-                    currentInventory.get(i).getName(),
-                    currentInventory.get(i).getQuantityInStock());
+        List<Product> currentInventory;
+        try {
+            currentInventory = service.getReadOnlyInventory();
+            for (int i = 0; i < currentInventory.size(); i++) {
+                System.out.printf("No: %d\tProduct: %s\tStock: %d%n",
+                        currentInventory.get(i).getId(),
+                        currentInventory.get(i).getName(),
+                        currentInventory.get(i).getQuantityInStock());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
