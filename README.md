@@ -264,47 +264,95 @@ Introduces a graphical user interface layer using JavaFX, transitioning from com
 
 ---
 
-## Chapter 12: JavaFX: Advanced Controls
+## Chapter 12: JavaFX — Advanced Controls
 
-### Planned Features
-- Data tables with sorting and filtering
-- Chart visualizations for sales trends
-- Searchable product catalogs
-- Dialog boxes for user confirmation
-- Custom styled components
+### Overview
+
+Enhances the JavaFX GUI with interactive components for basic data display and improved user interaction, while maintaining separation between UI and business logic.
+
+### Concepts Applied
+
+- TableView for displaying product data
+- Dialog boxes for user confirmation and input
+- Custom CSS-styled components for a consistent look
+- Separation of concerns between UI, service, and repository layers
+
+### Implementation Notes
+
+- Implemented ProductTableView to display products in a table
+- Created reusable confirmation and input dialogs (ConfirmationDialog, InputDialog)
+- Applied custom CSS for buttons and tables to improve UI consistency
+- Delegated all data operations to the service layer, keeping UI logic clean
+- Ensured table updates reflect any changes in inventory data
 
 ---
 
-## Chapter 13: JavaFX: Graphics, Effects, and Media
+## Chapter 13: JavaFX — Graphics, Effects, and Media
 
-### Planned Features
-- Product image display and management
-- Animations for inventory changes
-- Visual effects for alerts and notifications
-- Dashboard with graphical metrics
-- Enhanced user experience through multimedia
+### Overview
+
+Explored JavaFX graphics, effects, and multimedia features through practice exercises. No components from this chapter were integrated into the main Point-of-Sale application.
+
+### Concepts Applied
+
+- Image display and basic media handling
+- Simple animations and transitions
+- Visual effects such as shadows, highlights, and opacity changes
+- Multimedia playback (audio and video)
+- Experimentation with graphical layout and styling
+
+### Implementation Notes
+
+- All exercises were performed in standalone test applications
+- No features from this chapter were incorporated into the PoS system
+- Focus was on familiarization with JavaFX visual and multimedia capabilities
 
 ---
 
 ## Chapter 14: Recursion
 
-### Planned Features
-- Recursive inventory categorization
-- Hierarchical reporting structures
-- Advanced search algorithms
-- Complex discount calculation
-- Tree-based organization of product relationships
+### Overview
+
+Focused on practicing recursion concepts and problem-solving techniques. No recursive features were implemented in the Point-of-Sale system.
+
+### Concepts Applied
+
+- Recursive problem solving with classic exercises
+- Towers of Hanoi for understanding call stacks
+- Recursive sorting methods and array manipulation
+- Tracing method calls and stack flow for algorithmic understanding
+
+### Implementation Notes
+
+- All exercises were performed in standalone practice programs
+- Explored method call stack behavior and recursion depth
+- No recursion-based functionality was added to the inventory or sales systems
 
 ---
 
 ## Chapter 15: Databases
 
-### Planned Features
-- SQLite database integration
-- JDBC-based data persistence
-- CRUD operations for all domain objects
-- Transaction management with ACID compliance
-- Database-backed reporting and analytics
+### Overview
+
+Introduces database integration for persisting Product data using JDBC and a clean layered architecture. Focused on repository refactoring and designing a service interface for flexible back-end implementations.
+
+### Concepts Applied
+
+- JDBC connectivity and SQL query execution with Microsoft SQL Server
+- CRUD operations for the Product entity
+- Repository pattern to abstract database interactions (SqlInventoryRepository)
+- Service layer interface (InventoryService) for flexible backend implementations
+- Transaction handling and exception propagation
+- Separation of concerns: UI → Service → Repository
+
+### Implementation Notes
+
+- Configured JDBC connections in DatabaseConnection.java with proper resource management (try-with-resources)
+- Implemented SqlInventoryRepository.java with insert, update, delete, and select operations for Products
+- Refactored InventoryService.java to an interface delegating all database operations through the repository
+- Utilized RETURN_GENERATED_KEYS to synchronize Product.java objects with database IDs
+- Ensured UI logic (InventoryFXApplication.java and JavaFXEntry.java) remains independent of database operations
+- Prepared groundwork for flexible backend support while currently working with SQL Server
 
 ---
 
@@ -312,6 +360,7 @@ Introduces a graphical user interface layer using JavaFX, transitioning from com
 ```
 APEX-RETAIL-SERVICE/
 ├── .vscode/
+│   └── settings.json
 ├── data/
 │   └── inventoryFile.csv
 ├── src/
@@ -320,28 +369,38 @@ APEX-RETAIL-SERVICE/
 │   │   │   └── com/
 │   │   │       └── apexretail/
 │   │   │           ├── application/
-│   │   │           │   └── InventoryBatchManager.java
+│   │   │           │   ├── InventoryBatchManager.java
+│   │   │           │   ├── InventoryFXApplication.java
+│   │   │           │   └── JavaFXEntry.java
+│   │   │           ├── config/
+│   │   │           │   └── DatabaseConnection.java
 │   │   │           ├── diagnostics/
 │   │   │           │   └── SystemInfo.java
 │   │   │           ├── domain/
 │   │   │           │   ├── Category.java
 │   │   │           │   └── Product.java
 │   │   │           ├── repository/
-│   │   │           │   └── InventoryFileRepository.java
+│   │   │           │   ├── InventoryFileRepository.java
+│   │   │           │   ├── InventoryRepository.java
+│   │   │           │   └── SqlInventoryRepository.java
 │   │   │           ├── service/
 │   │   │           │   └── InventoryService.java
 │   │   │           └── utilities/
 │   │   │               └── TemperatureConverter.java
 │   │   └── resources/
+│   │       ├── db.properties.example
+│   │       └── inventory.css
 │   └── test/
 │       └── java/
 │           └── com/
 │               └── apexretail/
 │                   └── utilities/
-│                       └── TemperatureConverterTest.java
+│                       ├── TemperatureConverterTest.java
+│                       └── TestConnection.java
+├── target/
+├── .gitignore
 ├── pom.xml
 └── README.md
-
 ```
 ---
 

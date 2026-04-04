@@ -1,0 +1,15 @@
+# Database connection configuration for Apex Retail system
+# Place this file in src/main/resources/db.properties
+
+# JDBC URL for SQL Server
+# Format: jdbc:sqlserver://host:port;databaseName=db_name
+# Additional flags:
+#   encrypt=true - requires SSL
+#   trustServerCertificate=true - bypasses certificate validation (development only)
+db.url=jdbc:sqlserver://localhost:1433;databaseName=pos_db;encrypt=true;trustServerCertificate=true
+
+# Database username
+db.username=your_username
+
+# Database password
+db.password=your_password

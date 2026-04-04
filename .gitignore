@@ -1,0 +1,13 @@
+# Maven
+target/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+
+# Environment / config
+*.env
+db.properties
+inventoryFile.csv

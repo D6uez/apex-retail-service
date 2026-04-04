@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.apexretail.diagnostics.SystemInfo;
 import com.apexretail.domain.Product;
-import com.apexretail.repository.InventoryFileRepository;
+import com.apexretail.repository.SqlInventoryRepository;
 import com.apexretail.service.InventoryService;
 
 import javafx.application.Application;
@@ -86,7 +86,7 @@ public class InventoryFXApplication extends Application {
     // -------------------------------------------------------------------------
 
     /** Service layer that handles inventory business logic. */
-    private final InventoryService service = new InventoryService(new InventoryFileRepository());
+    private final InventoryService service = new InventoryService(new SqlInventoryRepository());
 
     /** Read‑only text area to display a history of completed transactions. */
     private TextArea transactionHistory;
@@ -158,37 +158,14 @@ public class InventoryFXApplication extends Application {
     }
 
     /**
-     * Builds and returns the menu bar for the application.
-     * Contains File menu (Exit) and Help menu (System Information).
-     *
-     * @return the configured MenuBar
+     * Initializes the transaction history text area with default properties.
+     * The area is read‑only, has a maximum width set by {@link #MAX_WIDTH},
+     * and starts with a header "Transaction History:\n".
      */
-    private MenuBar buildMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        Menu fileMenu = new Menu("File");
-        MenuItem exitItem = new MenuItem("Exit");
-        fileMenu.getItems().add(exitItem);
-
-        Menu helpMenu = new Menu("Help");
-        MenuItem systemInfoItem = new MenuItem("System Information");
-        helpMenu.getItems().add(systemInfoItem);
-
-        exitItem.setOnAction(event -> {
-            Platform.exit();
-        });
-
-        systemInfoItem.setOnAction(event -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("System Information");
-            alert.setHeaderText("Notice");
-            alert.setContentText(SystemInfo.getSystemInfo());
-            alert.showAndWait();
-        });
-
-        menuBar.getMenus().add(fileMenu);
-        menuBar.getMenus().add(helpMenu);
-
-        return menuBar;
+    private void buildTransactionHistory() {
+        transactionHistory = new TextArea("Transaction History:\n");
+        transactionHistory.setMaxWidth(MAX_WIDTH);
+        transactionHistory.setEditable(false);
     }
 
     /**
@@ -297,14 +274,37 @@ public class InventoryFXApplication extends Application {
     }
 
     /**
-     * Initializes the transaction history text area with default properties.
-     * The area is read‑only, has a maximum width set by {@link #MAX_WIDTH},
-     * and starts with a header "Transaction History:\n".
+     * Builds and returns the menu bar for the application.
+     * Contains File menu (Exit) and Help menu (System Information).
+     *
+     * @return the configured MenuBar
      */
-    private void buildTransactionHistory() {
-        transactionHistory = new TextArea("Transaction History:\n");
-        transactionHistory.setMaxWidth(MAX_WIDTH);
-        transactionHistory.setEditable(false);
+    private MenuBar buildMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        Menu fileMenu = new Menu("File");
+        MenuItem exitItem = new MenuItem("Exit");
+        fileMenu.getItems().add(exitItem);
+
+        Menu helpMenu = new Menu("Help");
+        MenuItem systemInfoItem = new MenuItem("System Information");
+        helpMenu.getItems().add(systemInfoItem);
+
+        exitItem.setOnAction(event -> {
+            Platform.exit();
+        });
+
+        systemInfoItem.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("System Information");
+            alert.setHeaderText("Notice");
+            alert.setContentText(SystemInfo.getSystemInfo());
+            alert.showAndWait();
+        });
+
+        menuBar.getMenus().add(fileMenu);
+        menuBar.getMenus().add(helpMenu);
+
+        return menuBar;
     }
 
     // -------------------------------------------------------------------------

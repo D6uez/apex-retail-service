@@ -8,6 +8,7 @@ import java.math.BigDecimal;
  * <p>
  * This class maintains product information and validates all attributes
  * to ensure data integrity. It includes inventory management capabilities.
+ * The ID can be set once (if initially zero) and cannot be changed thereafter.
  *
  * <p>
  * Example:
@@ -21,8 +22,8 @@ import java.math.BigDecimal;
  */
 public class Product {
 
-    /** Unique product identifier - cannot be changed after creation. */
-    private final long id;
+    /** Unique product identifier. Can be set only once if initially zero. */
+    private long id;
 
     /** Product name. */
     private String name;
@@ -195,6 +196,23 @@ public class Product {
     }
 
     /**
+     * Sets the product ID if it has not been set already (i.e., its current value
+     * is 0).
+     * Once set, the ID cannot be changed.
+     *
+     * @param id the new product ID (must be ≥ 0)
+     * @throws IllegalStateException    if the ID is already set (non-zero)
+     * @throws IllegalArgumentException if the ID is invalid
+     */
+    public void setId(long id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("ID is already set and cannot be changed.");
+        }
+        validateID(id);
+        this.id = id;
+    }
+
+    /**
      * Returns the product name.
      * 
      * @return product name
@@ -235,5 +253,4 @@ public class Product {
         return "Product [id=" + id + ", name=" + name + ", price=" + price + ", quantityInStock=" + quantityInStock
                 + ", category=" + category + "]";
     }
-
 }
