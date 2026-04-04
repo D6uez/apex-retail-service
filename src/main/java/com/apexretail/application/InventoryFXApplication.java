@@ -1,6 +1,7 @@
 package com.apexretail.application;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.apexretail.diagnostics.SystemInfo;
 import com.apexretail.domain.Product;
@@ -266,11 +267,8 @@ public class InventoryFXApplication extends Application {
         currentInventoryTableView.getColumns().add(nameCol);
         currentInventoryTableView.getColumns().add(qtyCol);
         currentInventoryTableView.getColumns().add(priceCol);
-        try {
-            currentInventoryTableView.setItems(FXCollections.observableArrayList(service.getReadOnlyInventory()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        refreshInventoryData();
     }
 
     /**
@@ -332,11 +330,13 @@ public class InventoryFXApplication extends Application {
             case SELL -> {
                 String message = service.sellProductByID(productID, qty);
                 showSuccessAlert(message);
+                refreshInventoryData();
                 appendTransaction(message);
             }
             case RESTOCK -> {
                 String message = service.restockProductByID(productID, qty);
                 showSuccessAlert(message);
+                refreshInventoryData();
                 appendTransaction(message);
             }
         }
@@ -403,5 +403,13 @@ public class InventoryFXApplication extends Application {
         alert.setHeaderText("Transaction Completed");
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void refreshInventoryData() {
+        try {
+            currentInventoryTableView.setItems(FXCollections.observableArrayList(service.getReadOnlyInventory()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
