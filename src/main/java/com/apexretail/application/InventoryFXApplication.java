@@ -1,7 +1,6 @@
 package com.apexretail.application;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.apexretail.diagnostics.SystemInfo;
 import com.apexretail.domain.Product;
