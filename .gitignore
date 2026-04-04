@@ -11,3 +11,4 @@ target/
 *.env
 db.properties
 inventoryFile.csv
+*.class
