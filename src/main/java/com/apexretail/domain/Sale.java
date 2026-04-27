@@ -30,27 +30,12 @@ public class Sale {
      * @param sTotalPrice initial total price (must be ≥ 0, can be zero)
      * @throws IllegalArgumentException if any parameter is invalid
      */
-    public Sale(long sId, LocalDateTime sSaleDate, BigDecimal sTotalPrice) {
-        validateID(sId);
-        validateSaleDate(sSaleDate);
-        validateTotalPrice(sTotalPrice);
+    public Sale(LocalDateTime saleDate) {
+        validateSaleDate(saleDate);
 
-        this.id = sId;
-        this.saleDate = sSaleDate;
-        this.totalPrice = sTotalPrice;
+        this.saleDate = saleDate;
         this.items = new ArrayList<>();
-    }
-
-    /**
-     * Validates that the sale ID is non‑negative.
-     *
-     * @param sId ID to validate
-     * @throws IllegalArgumentException if ID is negative
-     */
-    private void validateID(long sId) {
-        if (!(sId >= 0)) {
-            throw new IllegalArgumentException("ID must be greater than or equal to 0.");
-        }
+        this.totalPrice = BigDecimal.ZERO;
     }
 
     /**
@@ -61,7 +46,7 @@ public class Sale {
      */
     private void validateSaleDate(LocalDateTime sSaleDate) {
         if (sSaleDate == null) {
-            throw new IllegalArgumentException("Sales date cannot be null");
+            throw new IllegalArgumentException("Sale date cannot be null");
         }
     }
 
@@ -98,6 +83,23 @@ public class Sale {
         totalPrice = items.stream()
                 .map(SaleItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void setId(long id) {
+        validateID(id);
+        this.id = id;
+    }
+
+    /**
+     * Validates that the sale ID is non‑negative.
+     *
+     * @param sId ID to validate
+     * @throws IllegalArgumentException if ID is negative
+     */
+    private void validateID(long sId) {
+        if (sId <= 0) {
+            throw new IllegalArgumentException("ID must be greater than or equal to 0.");
+        }
     }
 
     @Override

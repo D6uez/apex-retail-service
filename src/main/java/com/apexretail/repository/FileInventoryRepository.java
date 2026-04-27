@@ -26,7 +26,7 @@ import com.apexretail.domain.Product;
  * on construction, and persists changes immediately when {@link #save(Product)}
  * is called.
  */
-public class InventoryFileRepository implements InventoryRepository {
+public class FileInventoryRepository implements InventoryRepository {
 
     private final String FILE_NAME = "inventoryFile.csv";
     private List<Product> inventory = new ArrayList<Product>();
@@ -35,7 +35,7 @@ public class InventoryFileRepository implements InventoryRepository {
      * Constructs the repository, loading inventory from the default CSV file.
      * If the file does not exist or is empty, a default inventory is created.
      */
-    public InventoryFileRepository() {
+    public FileInventoryRepository() {
         try {
             inventory = loadInventory(FILE_NAME);
             if (inventory.isEmpty()) {

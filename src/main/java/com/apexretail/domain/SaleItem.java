@@ -31,12 +31,11 @@ public class SaleItem {
      * @throws IllegalArgumentException if product is null, quantity ≤ 0, or
      *                                  unitPrice is null or negative
      */
-    public SaleItem(long id, Product product, int quantity, BigDecimal unitPrice) {
+    public SaleItem(Product product, int quantity, BigDecimal unitPrice) {
         validateProduct(product);
         validateQuantity(quantity);
         validateUnitPrice(unitPrice);
 
-        this.id = id;
         this.product = product;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
@@ -95,6 +94,23 @@ public class SaleItem {
      */
     public BigDecimal getSubtotal() {
         return subTotal;
+    }
+
+    public void setId(long id) {
+        validateID(id);
+        this.id = id;
+    }
+
+    /**
+     * Validates that the sale ID is non‑negative.
+     *
+     * @param sId ID to validate
+     * @throws IllegalArgumentException if ID is negative
+     */
+    private void validateID(long id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID must be greater than or equal to 0.");
+        }
     }
 
     @Override

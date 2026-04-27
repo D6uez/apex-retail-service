@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.apexretail.domain.Product;
-import com.apexretail.repository.InventoryFileRepository;
+import com.apexretail.repository.FileInventoryRepository;
 import com.apexretail.service.InventoryService;
 
 /**
@@ -44,7 +44,7 @@ public class InventoryBatchManager {
     public static void main(String[] args) {
         Scanner keyboard = new Scanner(System.in);
         boolean processRunning = true;
-        InventoryService invServiceObj = new InventoryService(new InventoryFileRepository());
+        InventoryService invServiceObj = new InventoryService(new FileInventoryRepository());
 
         // [sellCount, unitsSold, restockCount, unitsRestocked]
         int[] counters = new int[4];
