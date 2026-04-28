@@ -19,17 +19,17 @@ public class SaleItem {
     private BigDecimal subTotal;
 
     /**
-     * Constructs a SaleItem with the specified ID, product, quantity, and unit
-     * price.
+     * Constructs a SaleItem with the specified product, quantity, and unit price.
      * The subtotal is automatically calculated as unitPrice × quantity.
+     * The ID is not set in the constructor – it must be assigned later via
+     * {@link #setId(long)} (typically after persistence).
      *
-     * @param id        the sale item ID (must be ≥ 0)
      * @param product   the product being sold (cannot be null)
      * @param quantity  the quantity sold (must be > 0)
      * @param unitPrice the price per unit at the time of sale (must be
      *                  non‑negative)
-     * @throws IllegalArgumentException if product is null, quantity ≤ 0, or
-     *                                  unitPrice is null or negative
+     * @throws IllegalArgumentException if product is null, quantity ≤ 0,
+     *                                  or unitPrice is null or negative
      */
     public SaleItem(Product product, int quantity, BigDecimal unitPrice) {
         validateProduct(product);
@@ -88,7 +88,68 @@ public class SaleItem {
     }
 
     /**
-     * Returns the subtotal for this line item.
+     * Validates that the item ID is strictly positive.
+     * (Used when setting the ID after persistence.)
+     *
+     * @param id ID to validate
+     * @throws IllegalArgumentException if id ≤ 0
+     */
+    private void validateID(long id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID must be greater than 0.");
+        }
+    }
+
+    /**
+     * Sets the sale item ID. Typically called only once after the item has been
+     * persisted to the database. The ID must be a positive number (≥ 1).
+     *
+     * @param id positive ID (must be > 0)
+     * @throws IllegalArgumentException if id ≤ 0
+     */
+    public void setId(long id) {
+        validateID(id);
+        this.id = id;
+    }
+
+    /**
+     * Returns the sale item ID.
+     *
+     * @return the ID (0 if not yet persisted, otherwise positive)
+     */
+    public long getId() {
+        return id;
+    }
+
+    /**
+     * Returns the product ID associated with this sale item.
+     *
+     * @return the product ID
+     */
+    public long getProductId() {
+        return product.getId();
+    }
+
+    /**
+     * Returns the quantity of the product sold.
+     *
+     * @return the quantity
+     */
+    public int getQuantity() {
+        return quantity;
+    }
+
+    /**
+     * Returns the unit price at the time of sale.
+     *
+     * @return the unit price
+     */
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    /**
+     * Returns the subtotal for this line item (unitPrice × quantity).
      *
      * @return the calculated subtotal
      */
@@ -96,26 +157,9 @@ public class SaleItem {
         return subTotal;
     }
 
-    public void setId(long id) {
-        validateID(id);
-        this.id = id;
-    }
-
-    /**
-     * Validates that the sale ID is non‑negative.
-     *
-     * @param sId ID to validate
-     * @throws IllegalArgumentException if ID is negative
-     */
-    private void validateID(long id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID must be greater than or equal to 0.");
-        }
-    }
-
     @Override
     public String toString() {
-        return "SaleItem [id=" + id + ", product=" + product + ", quantity=" + quantity + ", unitPrice=" + unitPrice
-                + ", subTotal=" + subTotal + "]";
+        return "SaleItem [id=" + id + ", product=" + product + ", quantity=" + quantity
+                + ", unitPrice=" + unitPrice + ", subTotal=" + subTotal + "]";
     }
 }

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.apexretail.diagnostics.SystemInfo;
 import com.apexretail.domain.Product;
-import com.apexretail.repository.SqlInventoryRepository;
+import com.apexretail.repository.MSSQLInventoryRepository;
 import com.apexretail.service.InventoryService;
 
 import javafx.application.Application;
@@ -86,7 +86,7 @@ public class InventoryFXApplication extends Application {
     // -------------------------------------------------------------------------
 
     /** Service layer that handles inventory business logic. */
-    private final InventoryService service = new InventoryService(new SqlInventoryRepository());
+    private final InventoryService service = new InventoryService(new MSSQLInventoryRepository());
 
     /** Read‑only text area to display a history of completed transactions. */
     private TextArea transactionHistory;

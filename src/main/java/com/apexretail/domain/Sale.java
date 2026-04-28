@@ -10,56 +10,35 @@ import java.util.List;
  * Contains sale ID, date and time, total price, and a list of sale items.
  * The total price is automatically recalculated when items are added.
  *
+ * <p>
+ * The sale ID is only set after the sale is persisted (e.g., by a repository).
+ * The ID must be a positive number (≥ 1). A temporary Sale object may have its
+ * ID left as 0 until {@link #setId(long)} is called with a valid positive ID.
+ *
  * @author David
  * @version 1.0.0
  */
 public class Sale {
 
-    private long id;
+    private long id; // 0 means not yet persisted; must become >0 when set
     private LocalDateTime saleDate;
     private BigDecimal totalPrice;
     private List<SaleItem> items;
 
     /**
-     * Constructs a Sale with the specified ID, date, and total price.
-     * The item list is initialized empty; use {@link #addItem(SaleItem)} to add
+     * Constructs a Sale with the given date and a zero total.
+     * The item list is initially empty; use {@link #addItem(SaleItem)} to add
      * items.
+     * The ID is not set – it must be assigned later via {@link #setId(long)}.
      *
-     * @param sId         sale ID (must be ≥ 0)
-     * @param sSaleDate   date and time of the sale (cannot be null)
-     * @param sTotalPrice initial total price (must be ≥ 0, can be zero)
-     * @throws IllegalArgumentException if any parameter is invalid
+     * @param saleDate date and time of the sale (cannot be null)
+     * @throws IllegalArgumentException if saleDate is null
      */
     public Sale(LocalDateTime saleDate) {
         validateSaleDate(saleDate);
-
         this.saleDate = saleDate;
         this.items = new ArrayList<>();
         this.totalPrice = BigDecimal.ZERO;
-    }
-
-    /**
-     * Validates that the sale date is not null.
-     *
-     * @param sSaleDate date to validate
-     * @throws IllegalArgumentException if date is null
-     */
-    private void validateSaleDate(LocalDateTime sSaleDate) {
-        if (sSaleDate == null) {
-            throw new IllegalArgumentException("Sale date cannot be null");
-        }
-    }
-
-    /**
-     * Validates that the total price is non‑negative.
-     *
-     * @param sTotalPrice price to validate
-     * @throws IllegalArgumentException if price is null or negative
-     */
-    private void validateTotalPrice(BigDecimal sTotalPrice) {
-        if (sTotalPrice == null || sTotalPrice.signum() < 0) {
-            throw new IllegalArgumentException("Total price must be greater than or equal to 0.");
-        }
     }
 
     /**
@@ -77,29 +56,98 @@ public class Sale {
     }
 
     /**
-     * Recalculates the total price by summing the subtotals of all items.
+     * Sets the sale ID. Can be called only once (typically after persistence).
+     * The ID must be a positive number (≥ 1).
+     *
+     * @param id positive ID (must be > 0)
+     * @throws IllegalArgumentException if id ≤ 0
      */
-    private void recalculateTotal() {
-        totalPrice = items.stream()
-                .map(SaleItem::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
     public void setId(long id) {
         validateID(id);
         this.id = id;
     }
 
     /**
-     * Validates that the sale ID is non‑negative.
+     * Returns the sale ID.
      *
-     * @param sId ID to validate
-     * @throws IllegalArgumentException if ID is negative
+     * @return the sale ID (0 if not yet persisted, otherwise > 0)
      */
-    private void validateID(long sId) {
-        if (sId <= 0) {
-            throw new IllegalArgumentException("ID must be greater than or equal to 0.");
+    public long getId() {
+        return id;
+    }
+
+    /**
+     * Returns the date and time when the sale occurred.
+     *
+     * @return the sale date
+     */
+    public LocalDateTime getSaleDate() {
+        return saleDate;
+    }
+
+    /**
+     * Returns the total price of the sale (sum of all item subtotals).
+     *
+     * @return the total price
+     */
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    /**
+     * Returns an unmodifiable view of the list of sale items.
+     *
+     * @return an immutable list of SaleItem objects
+     */
+    public List<SaleItem> getItems() {
+        return List.copyOf(items);
+    }
+
+    /**
+     * Validates that the sale date is not null.
+     *
+     * @param saleDate date to validate
+     * @throws IllegalArgumentException if date is null
+     */
+    private void validateSaleDate(LocalDateTime saleDate) {
+        if (saleDate == null) {
+            throw new IllegalArgumentException("Sale date cannot be null");
         }
+    }
+
+    /**
+     * Validates that the sale ID is strictly positive.
+     *
+     * @param id ID to validate
+     * @throws IllegalArgumentException if id ≤ 0
+     */
+    private void validateID(long id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID must be greater than 0.");
+        }
+    }
+
+    /**
+     * Validates that the total price is non‑negative.
+     * (Currently not used because total is recalculated from items,
+     * but kept for completeness or future manual setting.)
+     *
+     * @param totalPrice price to validate
+     * @throws IllegalArgumentException if price is null or negative
+     */
+    private void validateTotalPrice(BigDecimal totalPrice) {
+        if (totalPrice == null || totalPrice.signum() < 0) {
+            throw new IllegalArgumentException("Total price must be greater than or equal to 0.");
+        }
+    }
+
+    /**
+     * Recalculates the total price by summing the subtotals of all items.
+     */
+    private void recalculateTotal() {
+        totalPrice = items.stream()
+                .map(SaleItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override

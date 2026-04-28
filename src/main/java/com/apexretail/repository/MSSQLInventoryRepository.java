@@ -20,7 +20,7 @@ import com.apexretail.domain.Product;
  * @author David
  * @version 1.0.0
  */
-public class SqlInventoryRepository implements InventoryRepository {
+public class MSSQLInventoryRepository implements InventoryRepository {
 
     /**
      * Retrieves all products from the database, joined with their category names.
